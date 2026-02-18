@@ -95,6 +95,7 @@ function Wave({ width, height, positions }: { width: number, height: number, pos
 
     // Dot texture
     const texture = useMemo(() => {
+        if (typeof document === 'undefined') return null
         const canvas = document.createElement("canvas")
         canvas.width = 32
         canvas.height = 32

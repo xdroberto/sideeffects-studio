@@ -1,14 +1,15 @@
 'use client'
 
-import dynamic from 'next/dynamic'
+import nextDynamic from 'next/dynamic'
 import { Suspense, useRef } from 'react'
-import { Nav } from './components/nav'
-import { Gallery } from './components/gallery'
-import { Footer } from './components/footer'
+import { Nav } from '@/components/nav'
+import { Gallery } from '@/components/gallery'
+import { Footer } from '@/components/footer'
+import { ClientOnly } from '@/components/client-only'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
-const DiamondScene = dynamic(
-  () => import('./components/diamond-scene').then(mod => mod.DiamondScene),
+const DiamondScene = nextDynamic(
+  () => import('@/components/diamond-scene').then(mod => mod.DiamondScene),
   { ssr: false, loading: () => <div className="fixed inset-0 z-0 bg-black" /> }
 )
 
@@ -29,10 +30,12 @@ export default function Home() {
         <DiamondScene />
       </Suspense>
       <div className="relative z-10">
-        <Nav
-          onGalleryClick={() => scrollToSection(galleryRef)}
-          onAboutClick={() => scrollToSection(aboutRef)}
-        />
+        <ClientOnly>
+          <Nav
+            onGalleryClick={() => scrollToSection(galleryRef)}
+            onAboutClick={() => scrollToSection(aboutRef)}
+          />
+        </ClientOnly>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
           <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center text-white ${microgramma.className}`}>
             side_effects.art
@@ -46,11 +49,16 @@ export default function Home() {
         </div>
       </div>
       <div id="gallery" ref={galleryRef}>
-        <Gallery />
+        <ClientOnly>
+          <Gallery />
+        </ClientOnly>
       </div>
       <div ref={aboutRef}>
-        <Footer />
+        <ClientOnly>
+          <Footer />
+        </ClientOnly>
       </div>
     </main>
   )
 }
+export const dynamic = "force-dynamic"

@@ -56,7 +56,7 @@ export const CustomFader: React.FC<CustomFaderProps> = ({ value, onChange, label
       setIsDragging(false)
     }
 
-    if (isDragging) {
+    if (isDragging && typeof window !== 'undefined') {
       window.addEventListener('mousemove', handleMouseMove)
       window.addEventListener('touchmove', handleTouchMove, { passive: false })
       window.addEventListener('mouseup', handleEnd)
@@ -64,10 +64,12 @@ export const CustomFader: React.FC<CustomFaderProps> = ({ value, onChange, label
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('touchmove', handleTouchMove)
-      window.removeEventListener('mouseup', handleEnd)
-      window.removeEventListener('touchend', handleEnd)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('touchmove', handleTouchMove)
+        window.removeEventListener('mouseup', handleEnd)
+        window.removeEventListener('touchend', handleEnd)
+      }
     }
   }, [isDragging, handleMove])
 
@@ -86,13 +88,13 @@ export const CustomFader: React.FC<CustomFaderProps> = ({ value, onChange, label
       >
         {/* Track background */}
         <div className="absolute inset-0 bg-gray-700" />
-        
+
         {/* Fill bar */}
         <div
           className="absolute bottom-0 left-0 right-0 bg-red-600 transition-all duration-75"
           style={{ height: fillHeight }}
         />
-        
+
         {/* Handle */}
         <div
           className="absolute left-0 right-0 h-6 bg-red-400 rounded-full shadow-md transition-all duration-75"

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useCallback } from 'react'
-import { Knob } from '../../components/ui/knob'
+import { Knob } from '@/components/ui/knob'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Power } from 'lucide-react'
@@ -25,15 +25,15 @@ const getColorForParam = (param: string) => {
 }
 
 export function SynthControls() {
-  const { 
-    synth, 
-    settings, 
-    setSettings, 
-    faderSettings, 
-    setFaderSettings, 
-    volume, 
-    setVolume, 
-    isPoweredOn, 
+  const {
+    synth,
+    settings,
+    setSettings,
+    faderSettings,
+    setFaderSettings,
+    volume,
+    setVolume,
+    isPoweredOn,
     togglePower,
     autoplayPattern,
     setAutoplayPattern,
@@ -77,7 +77,7 @@ export function SynthControls() {
   }, [setAutoplayPattern, startAutoplay, clearAllNotes])
 
   const getAutoplayLabel = (value: number) => {
-    switch(value) {
+    switch (value) {
       case 0: return 'OFF'
       case 1: return 'Simple'
       case 2: return 'Arpeggio'
@@ -116,8 +116,8 @@ export function SynthControls() {
                 w-12 h-12
                 rounded-full 
                 border-4 
-                ${isPoweredOn 
-                  ? 'bg-green-500 border-green-300 shadow-[inset_0_-4px_0_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.2)]' 
+                ${isPoweredOn
+                  ? 'bg-green-500 border-green-300 shadow-[inset_0_-4px_0_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.2)]'
                   : 'bg-red-500 border-red-300 shadow-[inset_0_-4px_0_rgba(0,0,0,0.2),0_2px_4px_rgba(0,0,0,0.2)]'
                 }
                 hover:brightness-110
@@ -145,20 +145,18 @@ export function SynthControls() {
           <div className="flex justify-around items-center px-4 py-2 bg-black/20 rounded-lg mb-4">
             {['particles', 'toon'].map((effect) => (
               <div key={effect} className="flex flex-col items-center space-y-2">
-                <div 
-                  className={`w-16 h-8 rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                    currentEffect === effect 
-                      ? 'bg-red-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]' 
+                <div
+                  className={`w-16 h-8 rounded-full p-1 cursor-pointer transition-all duration-300 ${currentEffect === effect
+                      ? 'bg-red-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]'
                       : 'bg-gray-700 shadow-[inset_0_2px_4px_rgba(0,0,0,0.3)]'
-                  }`}
+                    }`}
                   onClick={() => isPoweredOn && setCurrentEffect(effect as 'particles' | 'toon')}
                 >
-                  <div 
-                    className={`w-6 h-6 rounded-full transition-all duration-300 ${
-                      currentEffect === effect 
-                        ? 'bg-white translate-x-full shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
+                  <div
+                    className={`w-6 h-6 rounded-full transition-all duration-300 ${currentEffect === effect
+                        ? 'bg-white translate-x-full shadow-[0_2px_4px_rgba(0,0,0,0.3)]'
                         : 'bg-gray-400 shadow-[0_2px_4px_rgba(0,0,0,0.3)]'
-                    }`}
+                      }`}
                   />
                 </div>
                 <span className="text-xs text-red-400 capitalize">{effect}</span>
@@ -169,8 +167,8 @@ export function SynthControls() {
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-red-500 mb-4">Chord Keyboard</h3>
             {synth && (
-              <ChordKeyboard 
-                synth={synth} 
+              <ChordKeyboard
+                synth={synth}
                 onChordPlay={playChord}
                 onChordStop={stopChord}
                 activeChord={activeChord}
