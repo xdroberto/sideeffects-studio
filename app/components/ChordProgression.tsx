@@ -102,11 +102,11 @@ const ChordProgression: React.FC = () => {
     }
 
     setActiveChords(prev => ({ ...prev, [chord.name]: true }))
-    
+
     if (intervalRefs.current[chord.name]) {
       clearTimeout(intervalRefs.current[chord.name])
     }
-    
+
     intervalRefs.current[chord.name] = setTimeout(() => {
       setActiveChords(prev => ({ ...prev, [chord.name]: false }))
     }, sustain ? 2000 : 500)
@@ -116,7 +116,7 @@ const ChordProgression: React.FC = () => {
     // This is a simplified key change. In a real application, you'd need to implement proper transposition.
     const keyMap: { [key: string]: number } = { 'C': 0, 'G': 7, 'F': 5, 'Am': 9 }
     const semitones = keyMap[newKey] - keyMap['C']
-    
+
     const newChords = chords.map(chord => ({
       ...chord,
       notes: chord.notes.map(note => Tone.Frequency(note).transpose(semitones).toNote()),
@@ -125,9 +125,11 @@ const ChordProgression: React.FC = () => {
         [key]: notes.map(note => Tone.Frequency(note).transpose(semitones).toNote())
       }), {})
     }))
-    
+
     setChords(newChords)
   }
+
+  const MotionDiv = motion.div as any
 
   return (
     <div className="p-6 bg-gray-900 rounded-lg shadow-lg text-white">
@@ -177,41 +179,43 @@ const ChordProgression: React.FC = () => {
         ))}
       </div>
       <div className="grid grid-cols-4 gap-4">
-        {chords.map((chord) => (
-          <motion.div
-            key={chord.name}
-            className={`flex flex-col space-y-2 p-4 rounded-lg ${
-              activeChords[chord.name] ? 'bg-blue-600' : 'bg-gray-800'
-            }`}
-            animate={{
-              scale: activeChords[chord.name] ? 1.05 : 1,
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            <Button
-              onClick={() => playChord(chord, currentVariation)}
-              className="h-24 text-2xl font-bold bg-transparent hover:bg-blue-700"
+        {chords.map((chord) => {
+          return (
+            <MotionDiv
+              key={chord.name}
+              className={`flex flex-col space-y-2 p-4 rounded-lg ${activeChords[chord.name] ? 'bg-blue-600' : 'bg-gray-800'
+                }`}
+              variants={{
+                active: { scale: 1.05 },
+                inactive: { scale: 1 }
+              }}
+              animate={activeChords[chord.name] ? "active" : "inactive"}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
             >
-              {chord.name}
-            </Button>
-            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full bg-blue-500"
-                initial={{ width: "0%" }}
-                animate={{
-                  width: activeChords[chord.name] ? "100%" : "0%"
-                }}
-                transition={{
-                  duration: sustain ? 2 : 0.5
-                }}
-              />
-            </div>
-          </motion.div>
-        ))}
+              <Button
+                onClick={() => playChord(chord, currentVariation)}
+                className="h-24 text-2xl font-bold bg-transparent hover:bg-blue-700"
+              >
+                {chord.name}
+              </Button>
+              <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+                <MotionDiv
+                  className="h-full bg-blue-500"
+                  initial={{ width: "0%" }}
+                  animate={{
+                    width: activeChords[chord.name] ? "100%" : "0%"
+                  }}
+                  transition={{
+                    duration: sustain ? 2 : 0.5
+                  }}
+                />
+              </div>
+            </MotionDiv>
+          )
+        })}
       </div>
     </div>
   )
 }
 
 export default ChordProgression
-

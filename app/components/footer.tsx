@@ -6,21 +6,21 @@ import { Instagram, Twitter, Github } from 'lucide-react'
 export function Footer() {
   return (
     <footer id="about" className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4">
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-20" 
-        style={{ 
-          backgroundImage: 'url("https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4")',
-          backgroundBlendMode: 'overlay' 
-        }} 
+      <div
+        className="absolute inset-0 bg-cover bg-center opacity-20"
+        style={{
+          backgroundImage: 'url("https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&q=80")',
+          backgroundBlendMode: 'overlay'
+        }}
       />
-      
+
       <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
         <div className="space-y-4">
           <h3 className="text-xl font-light tracking-wider">CONNECT</h3>
           <div className="space-y-2 text-gray-400">
             <p>México</p>
-            <a 
-              href="mailto:hello@side-effects.art" 
+            <a
+              href="mailto:hello@side-effects.art"
               className="block hover:text-red-500 transition-colors"
             >
               hello@side-effects.art
@@ -45,11 +45,11 @@ export function Footer() {
             Exploring the intersection of code/art/creativity through generative art and interactive experiences.
           </p>
           <div className="pt-8">
-            <iframe 
-              src="https://open.spotify.com/embed/playlist/3e0xEfFFVAX3v6cq7MuU5I?utm_source=generator&theme=0" 
-              width="100%" 
-              height="152" 
-              frameBorder="0" 
+            <iframe
+              src="https://open.spotify.com/embed/playlist/3e0xEfFFVAX3v6cq7MuU5I?utm_source=generator&theme=0"
+              width="100%"
+              height="152"
+              frameBorder="0"
               allow="encrypted-media"
               className="rounded-lg"
             />

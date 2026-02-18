@@ -97,11 +97,11 @@ interface ChordKeyboardProps {
   currentProgressionIndex: number
 }
 
-export function ChordKeyboard({ 
-  synth, 
-  onChordPlay, 
+export function ChordKeyboard({
+  synth,
+  onChordPlay,
   onChordStop,
-  activeChord, 
+  activeChord,
   activeSections,
   chordProgression,
   updateChordProgression,
@@ -110,8 +110,8 @@ export function ChordKeyboard({
   autoplayPattern,
   currentProgressionIndex
 }: ChordKeyboardProps) {
-  const [localActiveNotes, setLocalActiveNotes] = useState<{[key: string]: ('high' | 'middle' | 'low')[]}>({})
-  const timeoutRefs = useRef<{[key: string]: NodeJS.Timeout}>({})
+  const [localActiveNotes, setLocalActiveNotes] = useState<{ [key: string]: ('high' | 'middle' | 'low')[] | undefined }>({})
+  const timeoutRefs = useRef<{ [key: string]: NodeJS.Timeout }>({})
   const isMounted = useRef(true)
   //const activeNotesRef = useRef<Array<{chord: string; section: 'high' | 'middle' | 'low'; releaseTime: number}>>([]);
 
@@ -204,7 +204,7 @@ export function ChordKeyboard({
       const newSections = existingPattern.sections.includes(section)
         ? existingPattern.sections.filter(s => s !== section)
         : [...existingPattern.sections, section]
-      
+
       if (newSections.length === 0) {
         removeChordFromProgression(existingIndex)
       } else {
@@ -253,10 +253,10 @@ export function ChordKeyboard({
                 "rounded-sm transition-colors relative",
                 section === 'middle' ? "h-32" : "h-16",
                 isChordActive(chord.name, section as 'high' | 'middle' | 'low')
-                  ? "bg-cyan-400" 
+                  ? "bg-cyan-400"
                   : "bg-white hover:bg-gray-100",
                 isChordInProgression(chord.name, section as 'high' | 'middle' | 'low') &&
-                  "ring-2 ring-purple-500"
+                "ring-2 ring-purple-500"
               )}
               onMouseDown={() => handleMouseDown(chord, section as 'high' | 'middle' | 'low')}
               onMouseUp={() => handleMouseUp(chord, section as 'high' | 'middle' | 'low')}

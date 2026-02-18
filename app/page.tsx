@@ -1,11 +1,16 @@
 'use client'
 
-import { useRef } from 'react'
+import dynamic from 'next/dynamic'
+import { Suspense, useRef } from 'react'
 import { Nav } from './components/nav'
-import { DiamondScene } from './components/diamond-scene'
 import { Gallery } from './components/gallery'
 import { Footer } from './components/footer'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
+
+const DiamondScene = dynamic(
+  () => import('./components/diamond-scene').then(mod => mod.DiamondScene),
+  { ssr: false, loading: () => <div className="fixed inset-0 z-0 bg-black" /> }
+)
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
 const spaceMono = Space_Mono({ subsets: ['latin'], weight: ['400'] })
@@ -14,13 +19,15 @@ export default function Home() {
   const galleryRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
 
-  const scrollToSection = (sectionRef: React.RefObject<HTMLDivElement>) => {
+  const scrollToSection = (sectionRef: React.RefObject<HTMLDivElement | null>) => {
     sectionRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
     <main className="relative min-h-screen bg-black text-white overflow-hidden">
-      <DiamondScene />
+      <Suspense fallback={<div className="fixed inset-0 z-0 bg-black" />}>
+        <DiamondScene />
+      </Suspense>
       <div className="relative z-10">
         <Nav
           onGalleryClick={() => scrollToSection(galleryRef)}

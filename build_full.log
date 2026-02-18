@@ -1,0 +1,181 @@
+﻿  Ôû▓ Next.js 14.2.16
+
+   Creating an optimized production build ...
+ Ô£ô Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/6) ...
+   Generating static pages (1/6) 
+   Generating static pages (2/6) 
+   Generating static pages (4/6) 
+node.exe : Error: 
+Configuration must 
+contain `projectId`
+En línea: 1 
+Carácter: 1
++ & "C:\Program Files
+\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (Error:    
+ Configur...ain `    
+projectId`:Strin    
+g) [], RemoteExc    
+eption
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+    at rL (C:\Users\x
+drob\.gemini\antigrav
+ity\scratch\portfolio
+-mvp\.next\server\app
+\page.js:9:51887)
+    at oc.config (C:\
+Users\xdrob\.gemini\a
+ntigravity\scratch\po
+rtfolio-mvp\.next\ser
+ver\app\page.js:20:29
+246)
+    at new oc (C:\Use
+rs\xdrob\.gemini\anti
+gravity\scratch\portf
+olio-mvp\.next\server
+\app\page.js:20:28613
+)
+    at createClient (
+C:\Users\xdrob\.gemin
+i\antigravity\scratch
+\portfolio-mvp\.next\
+server\app\page.js:20
+:31049)
+    at 55449 (C:\User
+s\xdrob\.gemini\antig
+ravity\scratch\portfo
+lio-mvp\.next\server\
+app\page.js:20:33061)
+    at Object.t [as 
+require] (C:\Users\xd
+rob\.gemini\antigravi
+ty\scratch\portfolio-
+mvp\.next\server\webp
+ack-runtime.js:1:127)
+    at require (C:\Us
+ers\xdrob\.gemini\ant
+igravity\scratch\port
+folio-mvp\node_module
+s\next\dist\compiled\
+next-server\app-page.
+runtime.prod.js:16:18
+669)
+    at i (C:\Users\xd
+rob\.gemini\antigravi
+ty\scratch\portfolio-
+mvp\node_modules\next
+\dist\compiled\next-s
+erver\app-page.runtim
+e.prod.js:12:88294)
+    at C:\Users\xdrob
+\.gemini\antigravity\
+scratch\portfolio-mvp
+\node_modules\next\di
+st\compiled\next-serv
+er\app-page.runtime.p
+rod.js:12:98817
+    at C:\Users\xdrob
+\.gemini\antigravity\
+scratch\portfolio-mvp
+\node_modules\next\di
+st\compiled\next-serv
+er\app-page.runtime.p
+rod.js:12:98904 {
+  digest: 
+'1223569963'
+}
+
+Error occurred 
+prerendering page 
+"/". Read more: https
+://nextjs.org/docs/me
+ssages/prerender-erro
+r
+
+Error: Configuration 
+must contain 
+`projectId`
+    at rL (C:\Users\x
+drob\.gemini\antigrav
+ity\scratch\portfolio
+-mvp\.next\server\app
+\page.js:9:51887)
+    at oc.config (C:\
+Users\xdrob\.gemini\a
+ntigravity\scratch\po
+rtfolio-mvp\.next\ser
+ver\app\page.js:20:29
+246)
+    at new oc (C:\Use
+rs\xdrob\.gemini\anti
+gravity\scratch\portf
+olio-mvp\.next\server
+\app\page.js:20:28613
+)
+    at createClient (
+C:\Users\xdrob\.gemin
+i\antigravity\scratch
+\portfolio-mvp\.next\
+server\app\page.js:20
+:31049)
+    at 55449 (C:\User
+s\xdrob\.gemini\antig
+ravity\scratch\portfo
+lio-mvp\.next\server\
+app\page.js:20:33061)
+    at Object.t [as 
+require] (C:\Users\xd
+rob\.gemini\antigravi
+ty\scratch\portfolio-
+mvp\.next\server\webp
+ack-runtime.js:1:127)
+    at require (C:\Us
+ers\xdrob\.gemini\ant
+igravity\scratch\port
+folio-mvp\node_module
+s\next\dist\compiled\
+next-server\app-page.
+runtime.prod.js:16:18
+669)
+    at i (C:\Users\xd
+rob\.gemini\antigravi
+ty\scratch\portfolio-
+mvp\node_modules\next
+\dist\compiled\next-s
+erver\app-page.runtim
+e.prod.js:12:88294)
+    at C:\Users\xdrob
+\.gemini\antigravity\
+scratch\portfolio-mvp
+\node_modules\next\di
+st\compiled\next-serv
+er\app-page.runtime.p
+rod.js:12:98817
+    at C:\Users\xdrob
+\.gemini\antigravity\
+scratch\portfolio-mvp
+\node_modules\next\di
+st\compiled\next-serv
+er\app-page.runtime.p
+rod.js:12:98904
+ Ô£ô Generating static pages (6/6)
+
+> Export encountered 
+errors on following 
+paths:
+	/page: /
