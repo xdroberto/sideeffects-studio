@@ -10,6 +10,9 @@ export interface GalleryItem {
     featured: boolean
     aspectRatio: string
     sortOrder: number
+    mediaType: 'image' | 'video'
+    videoUrl?: string          // YouTube/Vimeo embed URL
+    previewVideoPath?: string  // Short clip for grid preview
 }
 
 interface GalleryData {

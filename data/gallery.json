@@ -1,31 +1,34 @@
 {
-    "items": [
-        {
-            "id": "1",
-            "title": "Digital Waves",
-            "description": "Generative ocean patterns driven by noise algorithms.",
-            "imagePath": "/uploads/placeholder.svg",
-            "featured": true,
-            "aspectRatio": "landscape",
-            "sortOrder": 0
-        },
-        {
-            "id": "2",
-            "title": "Fractal Dimensions",
-            "description": "Recursive structures revealing infinite complexity.",
-            "imagePath": "/uploads/placeholder.svg",
-            "featured": false,
-            "aspectRatio": "landscape",
-            "sortOrder": 1
-        },
-        {
-            "id": "3",
-            "title": "Neural Patterns",
-            "description": "Visualizing the hidden layers of machine learning.",
-            "imagePath": "/uploads/placeholder.svg",
-            "featured": false,
-            "aspectRatio": "landscape",
-            "sortOrder": 2
-        }
-    ]
+  "items": [
+    {
+      "id": "1",
+      "title": "Digital Waves",
+      "description": "Generative ocean patterns driven by noise algorithms.",
+      "imagePath": "/uploads/915f5450-fce4-4ac3-9946-d8695a9cfa2e.png",
+      "featured": true,
+      "aspectRatio": "portrait",
+      "sortOrder": 0,
+      "mediaType": "image"
+    },
+    {
+      "id": "2",
+      "title": "Fractal Dimensions",
+      "description": "Recursive structures revealing infinite complexity.",
+      "imagePath": "/uploads/c9981398-aa39-45c9-9664-3e4ec3273aad.png",
+      "featured": false,
+      "aspectRatio": "square",
+      "sortOrder": 1,
+      "mediaType": "image"
+    },
+    {
+      "id": "3",
+      "title": "Neural Patterns",
+      "description": "Visualizing the hidden layers of machine learning.",
+      "imagePath": "/uploads/3495b0c9-b0a3-4760-bef9-b7183c55f260.jpg",
+      "featured": false,
+      "aspectRatio": "landscape",
+      "sortOrder": 2,
+      "mediaType": "image"
+    }
+  ]
 }

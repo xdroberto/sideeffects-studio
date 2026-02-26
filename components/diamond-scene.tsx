@@ -54,7 +54,7 @@ function Diamond() {
             <Line
                 points={diamondPoints}
                 color="red"
-                lineWidth={3} // Increased width
+                lineWidth={3} // Increased width <---------------------
                 segments
                 transparent
                 opacity={0.8}

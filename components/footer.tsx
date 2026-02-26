@@ -79,7 +79,7 @@ export function Footer() {
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <Link href="/licensing" className="hover:text-white transition-colors">Licensing</Link>
           </div>
-          <p>© 2024 side_effects.art. All rights reserved.</p>
+          <p>© 2024 side_effects.art<Link href="/admin" className="text-gray-800 hover:text-gray-600 transition-colors" aria-label="Admin">.</Link> All rights reserved.</p>
         </div>
       </div>
     </footer>

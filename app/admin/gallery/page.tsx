@@ -12,15 +12,23 @@ interface GalleryItem {
     featured: boolean
     aspectRatio: string
     sortOrder: number
+    mediaType: 'image' | 'video'
+    videoUrl?: string
+    previewVideoPath?: string
 }
 
-const EMPTY_FORM = { title: '', description: '', imagePath: '/uploads/placeholder.svg', featured: false, aspectRatio: 'landscape', sortOrder: 0 }
+const EMPTY_FORM = {
+    title: '', description: '', imagePath: '/uploads/placeholder.svg',
+    featured: false, aspectRatio: 'landscape', sortOrder: 0,
+    mediaType: 'image' as 'image' | 'video', videoUrl: '', previewVideoPath: '',
+}
 
 export default function AdminGallery() {
     const [items, setItems] = useState<GalleryItem[]>([])
     const [form, setForm] = useState(EMPTY_FORM)
     const [editId, setEditId] = useState<string | null>(null)
     const [uploading, setUploading] = useState(false)
+    const [uploadingPreview, setUploadingPreview] = useState(false)
     const [saving, setSaving] = useState(false)
     const [message, setMessage] = useState('')
     const router = useRouter()
@@ -35,10 +43,11 @@ export default function AdminGallery() {
 
     useEffect(() => { loadItems() }, [loadItems])
 
-    async function handleUpload(e: ChangeEvent<HTMLInputElement>) {
+    async function handleUpload(e: ChangeEvent<HTMLInputElement>, field: 'imagePath' | 'previewVideoPath') {
         const file = e.target.files?.[0]
         if (!file) return
-        setUploading(true)
+        const setLoading = field === 'imagePath' ? setUploading : setUploadingPreview
+        setLoading(true)
         try {
             const fd = new FormData()
             fd.append('file', file)
@@ -49,10 +58,10 @@ export default function AdminGallery() {
                 return
             }
             const data = await res.json()
-            setForm(prev => ({ ...prev, imagePath: data.path }))
-            setMessage('Image uploaded')
+            setForm(prev => ({ ...prev, [field]: data.path }))
+            setMessage(field === 'imagePath' ? 'Thumbnail uploaded' : 'Preview video uploaded')
         } catch { setMessage('Upload error') }
-        finally { setUploading(false) }
+        finally { setLoading(false) }
     }
 
     async function handleSubmit(e: FormEvent) {
@@ -60,11 +69,16 @@ export default function AdminGallery() {
         setSaving(true)
         setMessage('')
         try {
+            const payload = {
+                ...form,
+                videoUrl: form.videoUrl || undefined,
+                previewVideoPath: form.previewVideoPath || undefined,
+            }
             if (editId) {
                 const res = await fetch('/api/admin/gallery', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: editId, ...form }),
+                    body: JSON.stringify({ id: editId, ...payload }),
                 })
                 if (!res.ok) throw new Error()
                 setMessage('Updated')
@@ -72,7 +86,7 @@ export default function AdminGallery() {
                 const res = await fetch('/api/admin/gallery', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(form),
+                    body: JSON.stringify(payload),
                 })
                 if (!res.ok) throw new Error()
                 setMessage('Added')
@@ -102,6 +116,9 @@ export default function AdminGallery() {
             featured: item.featured,
             aspectRatio: item.aspectRatio,
             sortOrder: item.sortOrder,
+            mediaType: item.mediaType || 'image',
+            videoUrl: item.videoUrl || '',
+            previewVideoPath: item.previewVideoPath || '',
         })
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
@@ -124,6 +141,11 @@ export default function AdminGallery() {
         thumb: { position: 'relative' as const, width: '80px', height: '60px', borderRadius: '4px', overflow: 'hidden', background: '#0a0a0a', flexShrink: 0 },
         itemRow: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: '#111', border: '1px solid #222', borderRadius: '6px', marginBottom: '8px' } as const,
         msg: { padding: '6px 12px', background: '#112211', border: '1px solid #1a3a1a', color: '#6c6', borderRadius: '4px', fontSize: '12px', marginBottom: '12px' },
+        tab: (active: boolean) => ({
+            padding: '6px 14px', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px',
+            background: active ? '#c00' : '#222', color: active ? '#fff' : '#888',
+            transition: 'all 0.2s',
+        }),
     }
 
     return (
@@ -143,6 +165,13 @@ export default function AdminGallery() {
                         {editId ? 'Edit Item' : 'Add New Item'}
                     </h2>
                     <form onSubmit={handleSubmit}>
+                        {/* Media Type Toggle */}
+                        <label style={s.label}>Media Type</label>
+                        <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+                            <button type="button" onClick={() => setForm(p => ({ ...p, mediaType: 'image' }))} style={s.tab(form.mediaType === 'image')}>🖼 Image</button>
+                            <button type="button" onClick={() => setForm(p => ({ ...p, mediaType: 'video' }))} style={s.tab(form.mediaType === 'video')}>🎬 Video</button>
+                        </div>
+
                         <label style={s.label}>Title</label>
                         <input
                             style={s.input}
@@ -162,13 +191,14 @@ export default function AdminGallery() {
                             maxLength={200}
                         />
 
+                        {/* Thumbnail / Cover Image */}
                         <div style={s.row}>
                             <div style={{ flex: 1 }}>
-                                <label style={s.label}>Image</label>
+                                <label style={s.label}>{form.mediaType === 'video' ? 'Cover Image (thumbnail)' : 'Image'}</label>
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={handleUpload}
+                                    onChange={e => handleUpload(e, 'imagePath')}
                                     disabled={uploading}
                                     style={{ ...s.input, padding: '6px' }}
                                 />
@@ -180,6 +210,39 @@ export default function AdminGallery() {
                                 </div>
                             )}
                         </div>
+
+                        {/* Video-specific fields */}
+                        {form.mediaType === 'video' && (
+                            <>
+                                <label style={s.label}>Video URL (YouTube / Vimeo)</label>
+                                <input
+                                    style={s.input}
+                                    value={form.videoUrl}
+                                    onChange={e => setForm(p => ({ ...p, videoUrl: e.target.value }))}
+                                    placeholder="https://www.youtube.com/watch?v=... or https://vimeo.com/..."
+                                    maxLength={500}
+                                />
+                                <p style={{ color: '#555', fontSize: '11px', marginTop: '-6px', marginBottom: '12px' }}>
+                                    Full video for lightbox playback. Supports YouTube and Vimeo links.
+                                </p>
+
+                                <label style={s.label}>Preview Clip (optional, max 50MB)</label>
+                                <input
+                                    type="file"
+                                    accept="video/mp4,video/webm"
+                                    onChange={e => handleUpload(e, 'previewVideoPath')}
+                                    disabled={uploadingPreview}
+                                    style={{ ...s.input, padding: '6px' }}
+                                />
+                                {uploadingPreview && <span style={{ color: '#888', fontSize: '11px' }}>Uploading video...</span>}
+                                {form.previewVideoPath && (
+                                    <p style={{ color: '#6c6', fontSize: '11px', marginTop: '-4px' }}>✓ Preview: {form.previewVideoPath}</p>
+                                )}
+                                <p style={{ color: '#555', fontSize: '11px', marginTop: '2px', marginBottom: '12px' }}>
+                                    Short loop (5-10s) for the grid preview. If omitted, the cover image is shown instead.
+                                </p>
+                            </>
+                        )}
 
                         <div style={s.row}>
                             <div style={{ flex: 1 }}>
@@ -239,9 +302,15 @@ export default function AdminGallery() {
                     <div key={item.id} style={s.itemRow}>
                         <div style={s.thumb}>
                             <Image src={item.imagePath} alt={item.title} fill style={{ objectFit: 'cover' }} />
+                            {item.mediaType === 'video' && (
+                                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}>
+                                    <span style={{ fontSize: '20px' }}>▶</span>
+                                </div>
+                            )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ color: '#fff', fontSize: '14px', fontWeight: 500 }}>
+                                {item.mediaType === 'video' && <span style={{ color: '#c00', marginRight: '6px', fontSize: '11px' }}>🎬</span>}
                                 {item.title}
                                 {item.featured && <span style={{ color: '#c00', marginLeft: '6px', fontSize: '11px' }}>★ Featured</span>}
                             </div>

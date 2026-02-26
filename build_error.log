@@ -5,53 +5,30 @@
  Ô£ô Compiled successfully
    Linting and checking validity of types ...
    Collecting page data ...
-   Generating static pages (0/6) ...
-   Generating static pages (1/6) 
-   Generating static pages (2/6) 
-   Generating static pages (4/6) 
-node.exe : The 
-default export of 
-@sanity/image-url 
-has been deprecated. 
-Use the named export 
-`createImageUrlBuilde
-r` instead.
-En línea: 1 
-Carácter: 1
-+ & "C:\Program Files
-\nodejs/node.exe" 
-"C:\Program 
-Files\nodejs/node_mo 
-...
-+ ~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~~~~~~~~~~~~~~
-~~~~~~~~
-    + CategoryInfo   
-           : NotSpe  
-  cified: (The def   
- ault exp...ilder    
-` instead.:Strin    
-g) [], RemoteExc    
-eption
-    + FullyQualified 
-   ErrorId : Native  
-  CommandError
- 
- Ô£ô Generating static pages (6/6)
+   Generating static pages (0/11) ...
+   Generating static pages (2/11) 
+   Generating static pages (5/11) 
+   Generating static pages (8/11) 
+ Ô£ô Generating static pages (11/11)
    Finalizing page optimization ...
    Collecting build traces ...
 
 Route (app)                              Size     First Load JS
-Ôöî Ôùï /                                    15.2 kB         185 kB
-Ôö£ Ôùï /_not-found                          876 B          88.7 kB
-Ôö£ Ôùï /sf01                                243 kB          380 kB
-Ôöö ãÆ /studio/[[...tool]]                  1.35 MB        1.47 MB
-+ First Load JS shared by all            87.8 kB
-  Ôö£ chunks/117-e078c7d39b37f518.js       31.8 kB
-  Ôö£ chunks/fd9d1056-e0ae822d0371e13e.js  53.6 kB
-  Ôöö other shared chunks (total)          2.4 kB
+Ôöî Ôùï /                                    7.32 kB         147 kB
+Ôö£ Ôùï /_not-found                          873 B          88.2 kB
+Ôö£ Ôùï /admin                               1.04 kB        88.3 kB
+Ôö£ Ôùï /admin/gallery                       2.71 kB        95.2 kB
+Ôö£ ãÆ /api/admin/auth                      0 B                0 B
+Ôö£ ãÆ /api/admin/gallery                   0 B                0 B
+Ôö£ ãÆ /api/admin/upload                    0 B                0 B
+Ôöö Ôùï /sf01                                243 kB          378 kB
++ First Load JS shared by all            87.3 kB
+  Ôö£ chunks/117-e1d1821c5892a728.js       31.6 kB
+  Ôö£ chunks/fd9d1056-978fb3ad0384f526.js  53.6 kB
+  Ôöö other shared chunks (total)          2.07 kB
 
+
+ãÆ Middleware                             32.3 kB
 
 Ôùï  (Static)   prerendered as static content
 ãÆ  (Dynamic)  server-rendered on demand

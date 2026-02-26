@@ -39,7 +39,8 @@ async function main() {
         envContent += '\n'
     }
 
-    envContent += `ADMIN_PASSWORD_HASH=${hash}\n`
+    const hashB64 = Buffer.from(hash).toString('base64')
+    envContent += `ADMIN_PASSWORD_HASH=${hashB64}\n`
     envContent += `ADMIN_JWT_SECRET=${jwtSecret}\n`
 
     fs.writeFileSync(ENV_PATH, envContent)

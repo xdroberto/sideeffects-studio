@@ -12,6 +12,9 @@ interface Artwork {
   imagePath: string
   featured?: boolean
   aspectRatio?: string
+  mediaType?: 'image' | 'video'
+  videoUrl?: string
+  previewVideoPath?: string
 }
 
 // ─── Fallback data ──────────────────────────────────────────────────
@@ -31,6 +34,26 @@ const PLACEHOLDER_IMG = '/uploads/placeholder.svg'
 function sanitize(input: unknown, max = 200): string {
   if (typeof input !== 'string') return ''
   return input.slice(0, max).trim()
+}
+
+// ─── Video embed URL parser ─────────────────────────────────────────
+function getEmbedUrl(url?: string): string | null {
+  if (!url) return null
+  try {
+    // YouTube: youtube.com/watch?v=ID or youtu.be/ID
+    const ytMatch = url.match(
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
+    )
+    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`
+
+    // Vimeo: vimeo.com/ID
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
+    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`
+
+    return null
+  } catch {
+    return null
+  }
 }
 
 // ─── Component ──────────────────────────────────────────────────────
@@ -57,6 +80,9 @@ export function Gallery() {
             imagePath: item.imagePath || PLACEHOLDER_IMG,
             featured: Boolean(item.featured),
             aspectRatio: item.aspectRatio,
+            mediaType: item.mediaType || 'image',
+            videoUrl: item.videoUrl || undefined,
+            previewVideoPath: item.previewVideoPath || undefined,
           }))
           setGalleryItems(mapped)
         }
@@ -93,6 +119,7 @@ export function Gallery() {
       <div className="max-w-[1400px] mx-auto p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-1 auto-rows-[180px]">
           {galleryItems.map((artwork) => {
+            const isVideo = artwork.mediaType === 'video'
             const imgSrc = imageErrors.has(artwork.id) ? PLACEHOLDER_IMG : artwork.imagePath
             return (
               <MotionDiv
@@ -102,13 +129,37 @@ export function Gallery() {
                 whileHover={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                <Image
-                  src={imgSrc}
-                  alt={artwork.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  onError={() => handleImageError(artwork.id)}
-                />
+                {/* Grid tile: video preview or image */}
+                {isVideo && artwork.previewVideoPath ? (
+                  <video
+                    src={artwork.previewVideoPath}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                    poster={imgSrc}
+                  />
+                ) : (
+                  <Image
+                    src={imgSrc}
+                    alt={artwork.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    onError={() => handleImageError(artwork.id)}
+                  />
+                )}
+
+                {/* Play badge for video items */}
+                {isVideo && (
+                  <div className="absolute top-2 left-2 z-10 bg-black/70 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center pointer-events-none">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                      <polygon points="5,3 19,12 5,21" />
+                    </svg>
+                  </div>
+                )}
+
+                {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
                     <p className="text-white text-sm md:text-base font-medium">{artwork.title}</p>
@@ -125,48 +176,83 @@ export function Gallery() {
 
       {/* Lightbox */}
       <AnimatePresence>
-        {selectedArtwork && (
-          <MotionDiv
-            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={closeModal}
-          >
+        {selectedArtwork && (() => {
+          const isVideo = selectedArtwork.mediaType === 'video'
+          const embedUrl = isVideo ? getEmbedUrl(selectedArtwork.videoUrl) : null
+
+          return (
             <MotionDiv
-              className="relative max-w-5xl w-full h-full flex items-center justify-center p-4"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e: any) => e.stopPropagation()}
+              className="fixed inset-0 bg-black/90 flex items-center justify-center z-50"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={closeModal}
             >
-              <div className="relative w-full" style={{ height: '80vh' }}>
-                <Image
-                  src={imageErrors.has(selectedArtwork.id) ? PLACEHOLDER_IMG : selectedArtwork.imagePath}
-                  alt={selectedArtwork.title}
-                  fill
-                  className="object-contain"
-                  onError={() => handleImageError(selectedArtwork.id)}
-                />
-              </div>
-              <div className="absolute bottom-8 left-0 right-0 text-center px-4">
-                <h3 className="text-white text-xl md:text-2xl font-light">{selectedArtwork.title}</h3>
-                {selectedArtwork.description && (
-                  <p className="text-gray-400 text-sm md:text-base mt-2 max-w-lg mx-auto">{selectedArtwork.description}</p>
-                )}
-              </div>
-              <button
-                onClick={closeModal}
-                className="absolute top-4 right-4 text-white hover:text-red-500 transition-colors"
-                aria-label="Close"
+              <MotionDiv
+                className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center p-4"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e: any) => e.stopPropagation()}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
+                {/* Media content */}
+                <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
+                  {isVideo && embedUrl ? (
+                    /* YouTube / Vimeo embed */
+                    <div className="w-full" style={{ maxWidth: '960px', aspectRatio: '16/9' }}>
+                      <iframe
+                        src={embedUrl}
+                        className="w-full h-full rounded-lg"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={selectedArtwork.title}
+                      />
+                    </div>
+                  ) : isVideo && selectedArtwork.previewVideoPath ? (
+                    /* Direct video playback */
+                    <video
+                      src={selectedArtwork.previewVideoPath}
+                      controls
+                      autoPlay
+                      className="max-w-full max-h-[80vh] rounded-lg"
+                      poster={imageErrors.has(selectedArtwork.id) ? PLACEHOLDER_IMG : selectedArtwork.imagePath}
+                    />
+                  ) : (
+                    /* Image */
+                    <div className="relative w-full" style={{ height: '80vh' }}>
+                      <Image
+                        src={imageErrors.has(selectedArtwork.id) ? PLACEHOLDER_IMG : selectedArtwork.imagePath}
+                        alt={selectedArtwork.title}
+                        fill
+                        className="object-contain"
+                        onError={() => handleImageError(selectedArtwork.id)}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Text info with solid gradient backdrop */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-16 pb-8 px-4 text-center">
+                  <h3 className="text-white text-xl md:text-2xl font-light">{selectedArtwork.title}</h3>
+                  {selectedArtwork.description && (
+                    <p className="text-gray-300 text-sm md:text-base mt-2 max-w-lg mx-auto">{selectedArtwork.description}</p>
+                  )}
+                </div>
+
+                {/* Close button */}
+                <button
+                  onClick={closeModal}
+                  className="absolute top-4 right-4 text-white hover:text-red-500 transition-colors z-10"
+                  aria-label="Close"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </MotionDiv>
             </MotionDiv>
-          </MotionDiv>
-        )}
+          )
+        })()}
       </AnimatePresence>
     </div>
   )

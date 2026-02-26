@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSessionFromCookie } from '@/lib/auth'
+import { getSessionFromCookieAsync } from '@/lib/auth'
 import { getGalleryItems, addGalleryItem, updateGalleryItem, deleteGalleryItem } from '@/lib/gallery-data'
 
 async function requireAuth() {
-    const valid = await getSessionFromCookie()
+    const valid = await getSessionFromCookieAsync()
     if (!valid) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -39,6 +39,9 @@ export async function POST(request: NextRequest) {
             featured: Boolean(body.featured),
             aspectRatio: body.aspectRatio || 'landscape',
             sortOrder: typeof body.sortOrder === 'number' ? body.sortOrder : 999,
+            mediaType: body.mediaType === 'video' ? 'video' : 'image',
+            videoUrl: body.videoUrl ? String(body.videoUrl).slice(0, 500) : undefined,
+            previewVideoPath: body.previewVideoPath ? String(body.previewVideoPath) : undefined,
         })
 
         return NextResponse.json({ item }, { status: 201 })
@@ -66,6 +69,9 @@ export async function PUT(request: NextRequest) {
         if (body.featured !== undefined) updates.featured = Boolean(body.featured)
         if (body.aspectRatio !== undefined) updates.aspectRatio = String(body.aspectRatio)
         if (body.sortOrder !== undefined) updates.sortOrder = Number(body.sortOrder)
+        if (body.mediaType !== undefined) updates.mediaType = body.mediaType === 'video' ? 'video' : 'image'
+        if (body.videoUrl !== undefined) updates.videoUrl = String(body.videoUrl).slice(0, 500)
+        if (body.previewVideoPath !== undefined) updates.previewVideoPath = String(body.previewVideoPath)
 
         const item = updateGalleryItem(body.id, updates)
         if (!item) {

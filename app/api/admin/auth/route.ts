@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         }
 
         const token = await createSession()
-        await setSessionCookie(token)
+        setSessionCookie(token)
 
         return NextResponse.json({ success: true })
     } catch (error) {
@@ -35,6 +35,6 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/admin/auth — Logout
 export async function DELETE() {
-    await clearSessionCookie()
+    clearSessionCookie()
     return NextResponse.json({ success: true })
 }
