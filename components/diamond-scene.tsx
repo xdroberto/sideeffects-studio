@@ -54,7 +54,7 @@ function Diamond() {
             <Line
                 points={diamondPoints}
                 color="red"
-                lineWidth={3} // Increased width <---------------------
+                lineWidth={1}
                 segments
                 transparent
                 opacity={0.8}
@@ -183,26 +183,6 @@ function ConnectingLines({ width, height, wavePositions }: { width: number, heig
         <lineSegments ref={linesRef} geometry={lineGeo}>
             <lineBasicMaterial color="red" transparent opacity={0.6} linewidth={2} />
         </lineSegments>
-    )
-}
-
-function Contour({ width, height }: { width: number, height: number }) {
-    const points = useMemo(() => [
-        [0, height, 0],
-        [width, 0, 0],
-        [0, -height, 0],
-        [-width, 0, 0],
-        [0, height, 0]
-    ] as [number, number, number][], [width, height])
-
-    return (
-        <Line
-            points={points}
-            color="red"
-            lineWidth={5} // Thicker contour
-            transparent
-            opacity={1}
-        />
     )
 }
 
