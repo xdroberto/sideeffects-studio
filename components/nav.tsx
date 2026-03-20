@@ -9,21 +9,17 @@ import { Menu, X } from 'lucide-react'
 
 interface NavProps {
   className?: string
-  onGalleryClick: () => void
-  onAboutClick: () => void
 }
 
-export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
+export function Nav({ className }: NavProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
   const toggleMenu = useCallback(() => setIsOpen(prev => !prev), [])
   const closeMenu = useCallback(() => setIsOpen(false), [])
 
-  // Close on route change
   useEffect(() => { setIsOpen(false) }, [pathname])
 
-  // Lock body scroll when menu is open
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -37,21 +33,6 @@ export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
       <Link href="/" className={linkClass(pathname === '/')} onClick={closeMenu}>
         Home
       </Link>
-      <button
-        onClick={() => { onGalleryClick(); closeMenu() }}
-        className={`${linkClass(false)} cursor-pointer`}
-      >
-        Gallery
-      </button>
-      <button
-        onClick={() => { onAboutClick(); closeMenu() }}
-        className={`${linkClass(false)} cursor-pointer`}
-      >
-        About
-      </button>
-      <Link href="/sf01" className={linkClass(pathname === '/sf01')} onClick={closeMenu}>
-        SF01
-      </Link>
     </>
   )
 
@@ -62,12 +43,10 @@ export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
           <CustomLogo />
         </Link>
 
-        {/* Desktop links */}
         <div className="hidden md:flex gap-8 text-lg">
           {navItems}
         </div>
 
-        {/* Hamburger button */}
         <button
           onClick={toggleMenu}
           className="md:hidden relative z-50 text-gray-400 hover:text-white transition-colors p-1"
@@ -77,7 +56,6 @@ export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
         </button>
       </nav>
 
-      {/* Mobile overlay */}
       <div
         className={cn(
           "fixed inset-0 z-40 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-8 text-2xl transition-all duration-300 md:hidden",
