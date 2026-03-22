@@ -2,34 +2,14 @@
 
 import { useMemo, useRef } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Line, Sparkles, Stars } from "@react-three/drei"
+import { Sparkles, Stars } from "@react-three/drei"
 import * as THREE from "three"
 
 function Diamond() {
     const groupRef = useRef<THREE.Group>(null)
-    const waveGeometryRef = useRef<THREE.BufferGeometry>(null)
-
     // Configuration
     const width = 5
     const height = 3
-    const lines = 100 // Smoothness
-
-    // Generate Static Diamond Lines (Segments)
-    const diamondPoints = useMemo(() => {
-        const pts = []
-        for (let i = 0; i <= lines; i++) {
-            const t = i / lines
-            // Top to right
-            pts.push([0, height, 0], [width * t, height * (1 - t), 0])
-            // Right to bottom
-            pts.push([width, 0, 0], [width * (1 - t), -height * t, 0])
-            // Bottom to left
-            pts.push([0, -height, 0], [-width * t, -height * (1 - t), 0])
-            // Left to top
-            pts.push([-width, 0, 0], [-width * (1 - t), height * t, 0])
-        }
-        return pts as [number, number, number][]
-    }, [])
 
     useFrame((state) => {
         if (groupRef.current) {
@@ -50,16 +30,6 @@ function Diamond() {
 
     return (
         <group ref={groupRef}>
-            {/* Diamond Structure */}
-            <Line
-                points={diamondPoints}
-                color="red"
-                lineWidth={3} // Increased width <---------------------
-                segments
-                transparent
-                opacity={0.8}
-            />
-
             <Wave width={width} height={height} positions={wavePositions} />
             <ConnectingLines width={width} height={height} wavePositions={wavePositions} />
         </group>
@@ -183,26 +153,6 @@ function ConnectingLines({ width, height, wavePositions }: { width: number, heig
         <lineSegments ref={linesRef} geometry={lineGeo}>
             <lineBasicMaterial color="red" transparent opacity={0.6} linewidth={2} />
         </lineSegments>
-    )
-}
-
-function Contour({ width, height }: { width: number, height: number }) {
-    const points = useMemo(() => [
-        [0, height, 0],
-        [width, 0, 0],
-        [0, -height, 0],
-        [-width, 0, 0],
-        [0, height, 0]
-    ] as [number, number, number][], [width, height])
-
-    return (
-        <Line
-            points={points}
-            color="red"
-            lineWidth={5} // Thicker contour
-            transparent
-            opacity={1}
-        />
     )
 }
 
