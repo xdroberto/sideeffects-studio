@@ -1,47 +1,32 @@
 "use client"
 
-import { useMemo, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Line, Sparkles, Stars } from "@react-three/drei"
+import { Sparkles } from "@react-three/drei"
 import * as THREE from "three"
+
+// Global mouse state updated via window listener (bypasses z-index blocking)
+const globalMouse = { x: 0, y: 0 }
 
 function Diamond() {
     const groupRef = useRef<THREE.Group>(null)
-    const waveGeometryRef = useRef<THREE.BufferGeometry>(null)
-
-    // Configuration
     const width = 5
     const height = 3
-    const lines = 100 // Smoothness
 
-    // Generate Static Diamond Lines (Segments)
-    const diamondPoints = useMemo(() => {
-        const pts = []
-        for (let i = 0; i <= lines; i++) {
-            const t = i / lines
-            // Top to right
-            pts.push([0, height, 0], [width * t, height * (1 - t), 0])
-            // Right to bottom
-            pts.push([width, 0, 0], [width * (1 - t), -height * t, 0])
-            // Bottom to left
-            pts.push([0, -height, 0], [-width * t, -height * (1 - t), 0])
-            // Left to top
-            pts.push([-width, 0, 0], [-width * (1 - t), height * t, 0])
-        }
-        return pts as [number, number, number][]
-    }, [])
+    const smoothMouse = useRef({ x: 0, y: 0 })
 
-    useFrame((state) => {
+    useFrame(() => {
         if (groupRef.current) {
-            const time = state.clock.getElapsedTime()
+            // Smooth the global mouse input
+            smoothMouse.current.x = THREE.MathUtils.lerp(smoothMouse.current.x, globalMouse.x, 0.05)
+            smoothMouse.current.y = THREE.MathUtils.lerp(smoothMouse.current.y, globalMouse.y, 0.05)
 
-            // Mouse interaction
-            const mouseX = state.mouse.x * 0.5
-            const mouseY = state.mouse.y * 0.5
+            // Diamond subtly follows cursor
+            const targetRotY = smoothMouse.current.x * Math.PI * 0.08  // ±14° horizontal
+            const targetRotX = -smoothMouse.current.y * Math.PI * 0.06  // ±11° vertical
 
-            // Auto rotation + mouse influence
-            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.sin(time * 0.5) * 0.1 + mouseX, 0.1)
-            groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, Math.cos(time * 0.5) * 0.1 + mouseY, 0.1)
+            groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.05)
+            groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.05)
         }
     })
 
@@ -50,16 +35,6 @@ function Diamond() {
 
     return (
         <group ref={groupRef}>
-            {/* Diamond Structure */}
-            <Line
-                points={diamondPoints}
-                color="red"
-                lineWidth={3} // Increased width <---------------------
-                segments
-                transparent
-                opacity={0.8}
-            />
-
             <Wave width={width} height={height} positions={wavePositions} />
             <ConnectingLines width={width} height={height} wavePositions={wavePositions} />
         </group>
@@ -186,35 +161,178 @@ function ConnectingLines({ width, height, wavePositions }: { width: number, heig
     )
 }
 
-function Contour({ width, height }: { width: number, height: number }) {
-    const points = useMemo(() => [
-        [0, height, 0],
-        [width, 0, 0],
-        [0, -height, 0],
-        [-width, 0, 0],
-        [0, height, 0]
-    ] as [number, number, number][], [width, height])
+function TwinklingStars({ count = 1000 }: { count?: number }) {
+    const meshRef = useRef<THREE.Points>(null)
+
+    const { positions, speeds, phases, baseSizes } = useMemo(() => {
+        const positions = new Float32Array(count * 3)
+        const speeds = new Float32Array(count)
+        const phases = new Float32Array(count)
+        const baseSizes = new Float32Array(count)
+
+        for (let i = 0; i < count; i++) {
+            const r = 30 + Math.random() * 50
+            const theta = Math.random() * Math.PI * 2
+            const phi = Math.acos(2 * Math.random() - 1)
+            positions[i * 3] = r * Math.sin(phi) * Math.cos(theta)
+            positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta)
+            positions[i * 3 + 2] = r * Math.cos(phi)
+
+            speeds[i] = 0.2 + Math.random() * 1.0
+            phases[i] = Math.random() * Math.PI * 2
+            baseSizes[i] = 0.05 + Math.random() * 0.15 // Tiny stars
+        }
+        return { positions, speeds, phases, baseSizes }
+    }, [count])
+
+    const sizeBuffer = useMemo(() => new Float32Array(baseSizes), [baseSizes])
+
+    useFrame((state) => {
+        if (!meshRef.current) return
+        const time = state.clock.getElapsedTime()
+        const sizeAttr = meshRef.current.geometry.attributes.size as THREE.BufferAttribute
+        const arr = sizeAttr.array as Float32Array
+
+        for (let i = 0; i < count; i++) {
+            const twinkle = (Math.sin(time * speeds[i] + phases[i]) + 1) * 0.5
+            arr[i] = baseSizes[i] * (0.2 + twinkle * 0.8)
+        }
+        sizeAttr.needsUpdate = true
+    })
 
     return (
-        <Line
-            points={points}
-            color="red"
-            lineWidth={5} // Thicker contour
-            transparent
-            opacity={1}
-        />
+        <points ref={meshRef}>
+            <bufferGeometry>
+                <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+                <bufferAttribute attach="attributes-size" args={[sizeBuffer, 1]} />
+            </bufferGeometry>
+            <pointsMaterial
+                color="white"
+                size={0.1}
+                sizeAttenuation
+                transparent
+                opacity={0.8}
+            />
+        </points>
+    )
+}
+
+function ShootingStars() {
+    const maxStars = 5
+    const meshRef = useRef<THREE.Group>(null)
+
+    const stars = useMemo(() => {
+        return Array.from({ length: maxStars }, () => ({
+            position: new THREE.Vector3(),
+            velocity: new THREE.Vector3(),
+            progress: 0,
+            active: false,
+            nextSpawn: Math.random() * 5 + 3, // 3-8 seconds until first spawn
+            trail: [] as THREE.Vector3[],
+        }))
+    }, [])
+
+    useFrame((state, delta) => {
+        if (!meshRef.current) return
+        const time = state.clock.getElapsedTime()
+
+        stars.forEach((star, idx) => {
+            if (!star.active) {
+                star.nextSpawn -= delta
+                if (star.nextSpawn <= 0) {
+                    // Spawn from random edge
+                    const side = Math.random()
+                    const startX = (Math.random() - 0.5) * 40
+                    const startY = 10 + Math.random() * 15
+                    const startZ = -5 + Math.random() * -20
+
+                    star.position.set(startX, startY, startZ)
+                    // Shoot downward-diagonal
+                    const angle = -0.3 - Math.random() * 0.5
+                    const speed = 15 + Math.random() * 20
+                    star.velocity.set(
+                        (Math.random() > 0.5 ? 1 : -1) * speed * 0.6,
+                        speed * angle,
+                        0
+                    )
+                    star.progress = 0
+                    star.active = true
+                    star.trail = []
+                }
+                return
+            }
+
+            // Move
+            star.position.add(star.velocity.clone().multiplyScalar(delta))
+            star.progress += delta
+
+            // Deactivate after 1.5s
+            if (star.progress > 1.5) {
+                star.active = false
+                star.nextSpawn = 4 + Math.random() * 8 // 4-12s until next
+            }
+        })
+
+        // Update line children
+        const children = meshRef.current.children
+        stars.forEach((star, idx) => {
+            const line = children[idx] as THREE.Line
+            if (!line) return
+
+            if (star.active) {
+                // Build trail
+                star.trail.push(star.position.clone())
+                if (star.trail.length > 12) star.trail.shift()
+
+                const positions = new Float32Array(star.trail.length * 3)
+                star.trail.forEach((p, i) => {
+                    positions[i * 3] = p.x
+                    positions[i * 3 + 1] = p.y
+                    positions[i * 3 + 2] = p.z
+                })
+                line.geometry.dispose()
+                line.geometry = new THREE.BufferGeometry()
+                line.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+                line.visible = true;
+                (line.material as THREE.LineBasicMaterial).opacity = 1 - star.progress / 1.5
+            } else {
+                line.visible = false
+            }
+        })
+    })
+
+    return (
+        <group ref={meshRef}>
+            {Array.from({ length: maxStars }, (_, i) => (
+                <line key={i}>
+                    <bufferGeometry />
+                    <lineBasicMaterial color="white" transparent opacity={0.8} linewidth={1} />
+                </line>
+            ))}
+        </group>
     )
 }
 
 export function DiamondScene() {
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            // Normalize to -1 to 1 range (same as R3F state.mouse)
+            globalMouse.x = (e.clientX / window.innerWidth) * 2 - 1
+            globalMouse.y = -(e.clientY / window.innerHeight) * 2 + 1
+        }
+        window.addEventListener('mousemove', handleMouseMove)
+        return () => window.removeEventListener('mousemove', handleMouseMove)
+    }, [])
+
     return (
         <div className="fixed inset-0 z-0 bg-black">
-            <Canvas camera={{ position: [0, 2, 12], fov: 45 }} gl={{ antialias: false, alpha: false, stencil: false, depth: false }}>
+            <Canvas camera={{ position: [0, 2, 12], fov: 45 }} gl={{ antialias: true, alpha: false, stencil: false, depth: true }}>
                 <color attach="background" args={['black']} />
                 <Diamond />
 
                 {/* Background Atmosphere */}
-                <Stars radius={50} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
+                <TwinklingStars count={1000} />
+                <ShootingStars />
                 <Sparkles count={50} scale={10} size={2} speed={0.4} opacity={0.2} color="#ff0000" />
 
                 {/* Subtle ambient glow via emissive lighting */}

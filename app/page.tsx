@@ -37,10 +37,10 @@ export default function Home() {
           />
         </ClientOnly>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
-          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center text-white ${microgramma.className}`}>
+          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center chromatic-title ${microgramma.className}`}>
             side_effects.art
           </h1>
-          <p className={`mt-4 text-lg sm:text-xl md:text-2xl text-white ${spaceMono.className} mix-blend-difference opacity-70`}>
+          <p className={`mt-4 text-lg sm:text-xl md:text-2xl text-white ${spaceMono.className} mix-blend-difference opacity-70 subtitle-glow-only`}>
             elevating visual experiences
           </p>
           <div className="mt-auto p-8 text-gray-400 text-sm text-center">

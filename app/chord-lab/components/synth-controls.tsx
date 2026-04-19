@@ -94,7 +94,7 @@ export function SynthControls() {
           <CardTitle className={`flex items-center justify-between text-2xl md:text-3xl font-light tracking-wider text-red-500 ${microgramma.className}`}>
             <div className="flex">
               {isPoweredOn ? (
-                "SF-01 Synth".split('').map((char, index) => (
+                "Chord Lab".split('').map((char, index) => (
                   <span
                     key={index}
                     className="animate-knight-rider"
@@ -106,7 +106,7 @@ export function SynthControls() {
                   </span>
                 ))
               ) : (
-                "SF-01 Synth"
+                "Chord Lab"
               )}
             </div>
             <Button
