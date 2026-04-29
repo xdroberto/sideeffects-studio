@@ -1,7 +1,13 @@
 'use client'
 
+import nextDynamic from 'next/dynamic'
 import Link from 'next/link'
 import { Instagram, Github, Shield, Lock, Code } from 'lucide-react'
+
+const AsciiBackdrop = nextDynamic(
+  () => import('@/components/ascii-backdrop').then(mod => mod.AsciiBackdrop),
+  { ssr: false, loading: () => null },
+)
 
 function CCIcon({ className = "" }: { className?: string }) {
   return (
@@ -13,14 +19,22 @@ function CCIcon({ className = "" }: { className?: string }) {
 
 export function Footer() {
   return (
-    <footer id="about" className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4">
-      <div
-        className="absolute inset-0 bg-cover bg-center opacity-20"
-        style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&q=80")',
-          backgroundBlendMode: 'overlay'
-        }}
-      />
+    <footer id="about" className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4 overflow-hidden">
+      {/* ASCII backdrop sutil — sustituye la imagen Unsplash por un campo
+          generativo blanco de baja densidad y baja opacidad. Pointer-events
+          none → no captura clicks. */}
+      <div className="absolute inset-0 z-0" aria-hidden>
+        <AsciiBackdrop
+          cols={56}
+          ramp=" .,:-+*"
+          color="255, 255, 255"
+          baseAlpha={0.015}
+          peakAlpha={0.18}
+          noiseSpeed={0.00035}
+          attractRadius={220}
+          colorMode="solid"
+        />
+      </div>
 
       <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
         <div className="space-y-4">
