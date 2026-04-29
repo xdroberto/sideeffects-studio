@@ -9,11 +9,9 @@ import { Menu, X } from 'lucide-react'
 
 interface NavProps {
   className?: string
-  onGalleryClick: () => void
-  onAboutClick: () => void
 }
 
-export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
+export function Nav({ className }: NavProps) {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
@@ -32,23 +30,21 @@ export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
   const linkClass = (active: boolean) =>
     `transition-colors ${active ? 'text-red-500' : 'text-gray-400 hover:text-white'}`
 
+  // Gallery y About viven en la landing (`/`). Los anchors funcionan
+  // tanto desde la landing (scroll directo) como desde otras páginas
+  // (navegación + scroll). El comportamiento smooth lo gestiona el CSS
+  // global `scroll-behavior: smooth` en el `html`.
   const navItems = (
     <>
       <Link href="/" className={linkClass(pathname === '/')} onClick={closeMenu}>
         Home
       </Link>
-      <button
-        onClick={() => { onGalleryClick(); closeMenu() }}
-        className={`${linkClass(false)} cursor-pointer`}
-      >
+      <Link href="/#gallery" className={linkClass(false)} onClick={closeMenu}>
         Gallery
-      </button>
-      <button
-        onClick={() => { onAboutClick(); closeMenu() }}
-        className={`${linkClass(false)} cursor-pointer`}
-      >
+      </Link>
+      <Link href="/#about" className={linkClass(false)} onClick={closeMenu}>
         About
-      </button>
+      </Link>
       <Link href="/sf01" className={linkClass(pathname === '/sf01')} onClick={closeMenu}>
         SF01
       </Link>

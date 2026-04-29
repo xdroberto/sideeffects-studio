@@ -19,7 +19,7 @@ function CCIcon({ className = "" }: { className?: string }) {
 
 export function Footer() {
   return (
-    <footer id="about" className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4 overflow-hidden">
+    <footer className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4 overflow-hidden">
       {/* ASCII backdrop sutil — sustituye la imagen Unsplash por un campo
           generativo blanco de baja densidad y baja opacidad. Pointer-events
           none → no captura clicks. */}
