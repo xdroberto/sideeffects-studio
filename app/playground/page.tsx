@@ -6,6 +6,7 @@ import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
 import { ShrinkwrapText } from '@/components/playground/shrinkwrap-text'
+import { useMediaQuery } from '@/lib/use-media-query'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
@@ -36,9 +37,47 @@ sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor
 sit amet, consectetur, adipisci velit, sed quia non numquam eius modi
 tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.`
 
+/**
+ * Bloque de body con drop-cap. En desktop, el orb flotante con
+ * `shape-outside: circle(50%)` se inserta antes del párrafo principal
+ * y el texto reflujea alrededor. En mobile, el orb va apilado fuera
+ * de este bloque.
+ */
+function BodyText({ withFloatingOrb }: { withFloatingOrb: boolean }) {
+  return (
+    <>
+      {withFloatingOrb && (
+        <div
+          aria-hidden
+          className="float-right ml-8 mb-4 w-[300px] h-[300px]"
+          style={{
+            shapeOutside: 'circle(50%)',
+            shapeMargin: '14px',
+          }}
+        >
+          <DraggableOrb className="w-full h-full rounded-full border border-neutral-800 bg-neutral-950/40" />
+        </div>
+      )}
+
+      <div className={`${spaceMono.className} text-[15px] sm:text-base leading-[1.8] text-gray-300 space-y-6`}>
+        <p>
+          <span className="float-left mr-2 mt-1 text-5xl leading-none font-light text-red-500">
+            L
+          </span>
+          {LOREM_BODY.replace(/^Lorem/, 'orem')}
+        </p>
+        <p>{LOREM_BODY_2}</p>
+      </div>
+    </>
+  )
+}
+
 export default function PlaygroundPage() {
   const galleryRef = useRef<HTMLDivElement>(null)
   const aboutRef = useRef<HTMLDivElement>(null)
+  // Solo montamos UN canvas — el correspondiente al breakpoint actual.
+  // Esto evita que un segundo contexto WebGL se inicialice oculto.
+  const isDesktop = useMediaQuery('(min-width: 768px)', false)
 
   return (
     <main className="relative min-h-screen bg-black text-white">
@@ -50,14 +89,11 @@ export default function PlaygroundPage() {
       </ClientOnly>
 
       <article className="max-w-3xl mx-auto px-6 pt-12 pb-24 md:pt-20 md:pb-32">
-        {/* Header */}
         <header className="mb-12 md:mb-16 flex flex-col gap-4">
           <p className={`text-[11px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
             Playground · 2026
           </p>
-          <h1
-            className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider ${microgramma.className}`}
-          >
+          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider ${microgramma.className}`}>
             playground
           </h1>
           <ShrinkwrapText
@@ -69,43 +105,26 @@ export default function PlaygroundPage() {
           />
         </header>
 
-        {/* Mobile: orb stacked above text. Desktop: orb floats right, text reflows. */}
-        <div className="md:hidden mb-8">
-          <ClientOnly>
-            <DraggableOrb className="w-full h-[280px] rounded-[20px] border border-neutral-800 bg-neutral-950/60 overflow-hidden" />
-          </ClientOnly>
-          <p className={`mt-3 text-[11px] uppercase tracking-[0.18em] text-gray-500 ${spaceMono.className} text-center`}>
-            Drag the orb · scroll the rest
-          </p>
-        </div>
-
-        {/* Desktop float — shape-outside hace que el body fluya alrededor */}
-        <div
-          aria-hidden
-          className="hidden md:block float-right ml-8 mb-4 w-[300px] h-[300px]"
-          style={{
-            shapeOutside: 'circle(50%)',
-            shapeMargin: '14px',
-          }}
-        >
-          <ClientOnly>
-            <DraggableOrb className="w-full h-full rounded-full border border-neutral-800 bg-neutral-950/40" />
-          </ClientOnly>
-        </div>
-
-        <div className={`${spaceMono.className} text-[15px] sm:text-base leading-[1.8] text-gray-300 space-y-6`}>
-          <p>
-            <span className="float-left mr-2 mt-1 text-5xl leading-none font-light text-red-500">
-              L
-            </span>
-            {LOREM_BODY.replace(/^Lorem/, 'orem')}
-          </p>
-          <p>{LOREM_BODY_2}</p>
-        </div>
+        <ClientOnly>
+          {isDesktop ? (
+            // Desktop: orb flotante dentro del body, texto reflujea con shape-outside.
+            <BodyText withFloatingOrb />
+          ) : (
+            // Mobile: orb stacked arriba, body debajo full-width.
+            <>
+              <div className="mb-8">
+                <DraggableOrb className="w-full h-[280px] rounded-[20px] border border-neutral-800 bg-neutral-950/60 overflow-hidden" />
+                <p className={`mt-3 text-[11px] uppercase tracking-[0.18em] text-gray-500 ${spaceMono.className} text-center`}>
+                  Drag the orb · scroll the rest
+                </p>
+              </div>
+              <BodyText withFloatingOrb={false} />
+            </>
+          )}
+        </ClientOnly>
 
         <hr className="my-12 md:my-16 border-neutral-800" />
 
-        {/* Tools / Lineage block */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
           <div className="space-y-3">
             <p className={`text-[11px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>

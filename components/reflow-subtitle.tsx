@@ -5,42 +5,45 @@ import { fontShorthand, prepare, layoutAt, type PreparedTextWithSegments } from 
 import { usePointerTrack } from '@/lib/use-pointer-track'
 
 interface ReflowSubtitleProps {
-  /** Texto a renderizar. */
   text: string
-  /** Tamaño en px. */
   fontSize: number
-  /**
-   * className aplicada al container — debe definir la `font-family`.
-   * El componente lee la fuente computada desde el DOM para que Canvas2D
-   * mida con la misma fuente que pintamos (incluido lo que `next/font`
-   * inyecta como hash).
-   */
   className?: string
-  /** Color del texto (CSS color). */
   color?: string
-  /** Ancho mínimo al que puede contraerse el bloque (px). */
+  /** Ancho mínimo al que puede contraerse (px). */
   minWidth?: number
-  /** Ancho máximo al que puede expandirse (px). */
+  /** Ancho máximo. Se cap-ea al ancho real del container responsive. */
   maxWidth?: number
-  /** Altura de línea (px). Default: fontSize * 1.4 */
+  /** Altura de línea (px). Default fontSize * 1.4. */
   lineHeight?: number
   /**
-   * Ms sin input antes de soltar el control y volver a Lissajous idle.
-   * @default 1500
+   * Duración (ms) del intro one-shot al montar: el width hace un único
+   * sweep min→max para insinuar que es interactivo. Sin loop.
+   * @default 1400
    */
-  idleTimeout?: number
+  introDuration?: number
+  /**
+   * Si está activo, después del intro y de cada interacción, el width
+   * vuelve suavemente al máximo disponible (estado de reposo legible).
+   * @default true
+   */
+  restAtMax?: boolean
 }
 
 /**
- * Subtítulo cuyo wrap reflujea en tiempo real con el puntero / dedo.
+ * Subtítulo cuyo wrap reflujea con el puntero / dedo.
  *
- * - El `maxWidth` del bloque se mapea a la posición horizontal del input:
- *   izquierda → estrecho (más líneas), derecha → ancho (menos líneas).
- * - Pretext re-layout-ea por frame (es su súper poder: hot-path barato).
- * - En mobile, `usePointerTrack` cede el touch al scroll vertical si el
- *   primer movimiento del dedo es vertical.
- * - En idle, el `maxWidth` se anima con un Lissajous lento como hint de
- *   interactividad. Respeta `prefers-reduced-motion`.
+ * Estructura:
+ * - Outer (`role="presentation"`): width: 100%, max-width: maxWidth,
+ *   responsive — NUNCA desborda viewport. Captura puntero en toda su área.
+ * - Inner (text wrapper): width dinámico, cap-eado a outer.clientWidth,
+ *   centrado, con `cursor: ew-resize` solo aquí.
+ *
+ * Comportamiento:
+ * - Intro one-shot al montar (1.4s) → hint discreto.
+ * - En reposo el texto vuelve al ancho máximo disponible.
+ * - Hover/touch → el width sigue el puntero en X.
+ * - `touch-action: pan-y` → mobile scroll vertical no se bloquea.
+ * - Respeta `prefers-reduced-motion` (sin intro, ancho fijo al máximo).
  */
 export function ReflowSubtitle({
   text,
@@ -50,17 +53,21 @@ export function ReflowSubtitle({
   minWidth = 140,
   maxWidth = 520,
   lineHeight,
-  idleTimeout = 1500,
+  introDuration = 1400,
+  restAtMax = true,
 }: ReflowSubtitleProps) {
   const lh = lineHeight ?? fontSize * 1.4
   const { ref: pointerRef, state } = usePointerTrack<HTMLDivElement>()
   const measureRef = useRef<HTMLDivElement>(null)
+  const [availableWidth, setAvailableWidth] = useState<number>(maxWidth)
   const [renderedWidth, setRenderedWidth] = useState<number>(maxWidth)
   const [prepared, setPrepared] = useState<PreparedTextWithSegments | null>(null)
   const [reduceMotion, setReduceMotion] = useState(false)
+  const mountedAt = useRef<number>(0)
 
-  // Detectar prefers-reduced-motion
+  // Detectar prefers-reduced-motion + timestamp de mount.
   useEffect(() => {
+    mountedAt.current = performance.now()
     if (typeof window === 'undefined') return
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
     setReduceMotion(mq.matches)
@@ -69,8 +76,23 @@ export function ReflowSubtitle({
     return () => mq.removeEventListener?.('change', onChange)
   }, [])
 
-  // Preparar pretext una vez la fuente esté lista. Leemos la fontFamily
-  // resuelta del DOM (incluye el hash de next/font).
+  // Medir el ancho disponible REAL del outer (que ya está cap-eado por
+  // CSS responsive) y reaccionar a resize. Esto rompe el loop "child
+  // infla parent" porque outer es width:100% + max-width.
+  useEffect(() => {
+    const el = pointerRef.current
+    if (!el) return
+    const measure = () => {
+      const w = el.clientWidth || el.getBoundingClientRect().width
+      if (w > 0) setAvailableWidth(Math.min(maxWidth, Math.max(minWidth, w)))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [maxWidth, minWidth, pointerRef])
+
+  // Preparar pretext una vez la fuente esté lista.
   useEffect(() => {
     let cancelled = false
     const doPrepare = () => {
@@ -96,30 +118,29 @@ export function ReflowSubtitle({
     }
   }, [text, fontSize])
 
-  // Hot-path: animar width hacia objetivo basado en pointer (o Lissajous idle).
+  // Hot-path: animar width.
   useEffect(() => {
     let raf = 0
-    let lastActiveAt = performance.now()
-    const startedAt = performance.now()
+    const introMs = reduceMotion ? 0 : introDuration
 
     const tick = () => {
       const now = performance.now()
-      const elapsed = (now - startedAt) / 1000
+      const elapsed = now - mountedAt.current
+      const effectiveMin = Math.min(minWidth, availableWidth)
+      const effectiveMax = availableWidth
 
       let target: number
+
       if (state.active) {
-        const t = state.x
-        target = minWidth + (maxWidth - minWidth) * t
-        lastActiveAt = now
-      } else if (now - lastActiveAt < idleTimeout) {
-        target = renderedWidth
-      } else if (reduceMotion) {
-        target = maxWidth
+        target = effectiveMin + (effectiveMax - effectiveMin) * state.x
+      } else if (elapsed < introMs) {
+        const t = Math.min(1, elapsed / introMs)
+        const eased = 1 - Math.pow(1 - t, 3)
+        target = effectiveMin + (effectiveMax - effectiveMin) * eased
+      } else if (restAtMax) {
+        target = effectiveMax
       } else {
-        // Idle Lissajous lento — invita a tocar.
-        const phase = elapsed * 0.4
-        const t = 0.5 + 0.45 * Math.sin(phase) * Math.cos(phase * 0.7)
-        target = minWidth + (maxWidth - minWidth) * t
+        target = renderedWidth
       }
 
       setRenderedWidth(prev => {
@@ -132,29 +153,31 @@ export function ReflowSubtitle({
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.active, state.x, minWidth, maxWidth, idleTimeout, reduceMotion])
+  }, [state.active, state.x, minWidth, availableWidth, restAtMax, introDuration, reduceMotion])
 
-  // Calcular líneas con pretext al ancho actual.
+  // Layout actual con pretext, cap-eado al ancho real.
+  const innerWidth = Math.max(
+    minWidth,
+    Math.min(availableWidth, renderedWidth),
+  )
   const layout = useMemo(() => {
     if (!prepared) return null
-    return layoutAt(prepared, Math.max(minWidth, renderedWidth), lh)
-  }, [prepared, renderedWidth, lh, minWidth])
+    return layoutAt(prepared, innerWidth, lh)
+  }, [prepared, innerWidth, lh])
 
   return (
     <div
       ref={pointerRef as React.RefObject<HTMLDivElement>}
       className={className}
       style={{
-        // Permite scroll vertical en mobile, intercepta solo horizontal.
-        touchAction: 'pan-y',
-        // El container ocupa el ancho máximo para que el puntero pueda
-        // barrer todo el rango.
-        width: `${maxWidth}px`,
-        maxWidth: '100%',
-        position: 'relative',
+        // Outer responsive: 100% del padre, capeado a maxWidth, centrado.
+        // Nunca desborda viewport.
+        width: '100%',
+        maxWidth: `${maxWidth}px`,
         margin: '0 auto',
-        cursor: 'ew-resize',
-        // Reservamos altura mínima para evitar layout shift.
+        position: 'relative',
+        // Mobile scroll vertical libre. Solo intercepta drag horizontal.
+        touchAction: 'pan-y',
         minHeight: `${lh * 2}px`,
         fontSize: `${fontSize}px`,
         lineHeight: `${lh}px`,
@@ -163,8 +186,7 @@ export function ReflowSubtitle({
       aria-label={text}
       role="presentation"
     >
-      {/* Sondeo invisible: hereda la className/font para que readComputed
-          devuelva la fontFamily real (incl. hash de next/font). */}
+      {/* Sondeo invisible: lee fontFamily computada (incl. hash next/font). */}
       <div
         ref={measureRef}
         aria-hidden
@@ -176,10 +198,13 @@ export function ReflowSubtitle({
       {layout ? (
         <div
           style={{
-            width: `${renderedWidth}px`,
+            // Inner: ancho dinámico, cap-eado al outer real.
+            width: `${innerWidth}px`,
+            maxWidth: '100%',
             margin: '0 auto',
             position: 'relative',
             height: `${layout.height}px`,
+            cursor: 'ew-resize',
           }}
         >
           {layout.lines.map((line, i) => (
@@ -200,7 +225,6 @@ export function ReflowSubtitle({
           ))}
         </div>
       ) : (
-        // Fallback no-JS / pretext aún midiendo. Centrado y en una línea.
         <p style={{ margin: 0, textAlign: 'center' }}>{text}</p>
       )}
     </div>

@@ -45,7 +45,7 @@ export default function Home() {
           <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center chromatic-title ${microgramma.className}`}>
             side_effects.art
           </h1>
-          <div className={`mt-4 mix-blend-difference opacity-70 subtitle-glow-only`}>
+          <div className={`mt-8 mix-blend-difference opacity-70 subtitle-glow-only`}>
             <ClientOnly>
               <ReflowSubtitle
                 text="elevating visual experiences"
