@@ -6,6 +6,7 @@ import { Nav } from '@/components/nav'
 import { Gallery } from '@/components/gallery'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
+import { ReflowSubtitle } from '@/components/reflow-subtitle'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
 const DiamondScene = nextDynamic(
@@ -14,7 +15,11 @@ const DiamondScene = nextDynamic(
 )
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
-const spaceMono = Space_Mono({ subsets: ['latin'], weight: ['400'] })
+const spaceMono = Space_Mono({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-space-mono',
+})
 
 export default function Home() {
   const galleryRef = useRef<HTMLDivElement>(null)
@@ -40,9 +45,18 @@ export default function Home() {
           <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center chromatic-title ${microgramma.className}`}>
             side_effects.art
           </h1>
-          <p className={`mt-4 text-lg sm:text-xl md:text-2xl text-white ${spaceMono.className} mix-blend-difference opacity-70 subtitle-glow-only`}>
-            elevating visual experiences
-          </p>
+          <div className={`mt-4 mix-blend-difference opacity-70 subtitle-glow-only`}>
+            <ClientOnly>
+              <ReflowSubtitle
+                text="elevating visual experiences"
+                fontSize={20}
+                color="white"
+                minWidth={140}
+                maxWidth={520}
+                className={spaceMono.className}
+              />
+            </ClientOnly>
+          </div>
           <div className="mt-auto p-8 text-gray-400 text-sm text-center">
             Generative Art • Interactive Design • Visual Symphony
           </div>

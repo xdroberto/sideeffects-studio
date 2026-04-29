@@ -55,6 +55,9 @@ export function Nav({ className, onGalleryClick, onAboutClick }: NavProps) {
       <Link href="/chord-lab" className={linkClass(pathname === '/chord-lab')} onClick={closeMenu}>
         Chord Lab
       </Link>
+      <Link href="/playground" className={linkClass(pathname === '/playground')} onClick={closeMenu}>
+        Playground
+      </Link>
     </>
   )
 
