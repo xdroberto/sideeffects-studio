@@ -42,21 +42,26 @@ export default function Home() {
         <DiamondScene />
       </Suspense>
 
-      {/* AsciiBackdrop SOLO en la zona del hero. mix-blend-screen para
-          que sume luz al diamond detrás en lugar de taparlo. Pointer
-          events: none → no captura clicks. */}
+      {/* AsciiBackdrop SOLO en la zona del hero. `mix-blend-mode: difference`
+          + colores HSL con hue rotando → sobre el diamante rojo del
+          DiamondScene se produce un efecto iridiscente tipo oil-slick.
+          Sobre las zonas negras, los caracteres aparecen en sus colores
+          HSL nativos. Pointer events: none → no captura clicks. */}
       <section className="relative min-h-[calc(100vh)] overflow-hidden">
         <ClientOnly>
           <div
             className="absolute inset-0 z-[1]"
-            style={{ mixBlendMode: 'screen' }}
+            style={{ mixBlendMode: 'difference' }}
             aria-hidden
           >
             <AsciiBackdrop
               cols={92}
-              color="220, 38, 38"
-              baseAlpha={0.04}
-              peakAlpha={0.65}
+              colorMode="iridescent"
+              iridescenceSaturation={90}
+              iridescenceLightness={62}
+              iridescenceSpeed={0.00022}
+              baseAlpha={0.08}
+              peakAlpha={0.85}
               attractRadius={280}
             />
           </div>

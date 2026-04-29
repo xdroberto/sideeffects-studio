@@ -25,6 +25,21 @@ interface AsciiBackdropProps {
    * @default true
    */
   followPointer?: boolean
+  /**
+   * Modo de color de los caracteres.
+   * - `solid` (default): todos los caracteres usan `color`.
+   * - `iridescent`: el hue varía por celda + tiempo en HSL, produciendo
+   *   un campo cromático que con `mix-blend-mode: difference` simula
+   *   iridiscencia oil-slick sobre superficies de color (e.g. el diamante
+   *   rojo del fondo).
+   */
+  colorMode?: 'solid' | 'iridescent'
+  /** Saturación HSL en modo iridescent (0..100). */
+  iridescenceSaturation?: number
+  /** Lightness HSL en modo iridescent (0..100). */
+  iridescenceLightness?: number
+  /** Velocidad de rotación de hue (más alto = más rápido). */
+  iridescenceSpeed?: number
   /** className aplicado al wrapper. */
   className?: string
 }
@@ -52,6 +67,10 @@ export function AsciiBackdrop({
   noiseSpeed = 0.0007,
   attractRadius = 240,
   followPointer = true,
+  colorMode = 'solid',
+  iridescenceSaturation = 85,
+  iridescenceLightness = 70,
+  iridescenceSpeed = 0.00018,
   className,
 }: AsciiBackdropProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -169,7 +188,17 @@ export function AsciiBackdrop({
           if (ch === ' ') continue
 
           const alpha = baseAlpha + brightness * (peakAlpha - baseAlpha)
-          ctx.fillStyle = `rgba(${color}, ${alpha.toFixed(3)})`
+
+          if (colorMode === 'iridescent') {
+            // Hue varía por celda + tiempo. Con `mix-blend-mode: difference`
+            // en el contenedor, sobre superficies coloreadas (e.g. el diamante
+            // rojo) se traduce en un campo cromático tipo oil-slick.
+            const hue =
+              (c * 6 + r * 3 + t * iridescenceSpeed * 1000 + attract * 90) % 360
+            ctx.fillStyle = `hsla(${hue.toFixed(1)}, ${iridescenceSaturation}%, ${iridescenceLightness}%, ${alpha.toFixed(3)})`
+          } else {
+            ctx.fillStyle = `rgba(${color}, ${alpha.toFixed(3)})`
+          }
           ctx.fillText(ch, cx, cy)
         }
       }
@@ -187,7 +216,21 @@ export function AsciiBackdrop({
         window.removeEventListener('pointerleave', onPointerLeave)
       }
     }
-  }, [cols, rows, ramp, color, baseAlpha, peakAlpha, noiseSpeed, attractRadius, followPointer])
+  }, [
+    cols,
+    rows,
+    ramp,
+    color,
+    baseAlpha,
+    peakAlpha,
+    noiseSpeed,
+    attractRadius,
+    followPointer,
+    colorMode,
+    iridescenceSaturation,
+    iridescenceLightness,
+    iridescenceSpeed,
+  ])
 
   return (
     <canvas
