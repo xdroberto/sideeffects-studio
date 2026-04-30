@@ -15,10 +15,19 @@ const ReflowCanvas = nextDynamic(
   { ssr: false, loading: () => null },
 )
 
-const LOREM_LEAD =
-  'Drag the red orb. The text reflows around it in real time using @chenglou/pretext for the line layout.'
+const LEAD =
+  'Drag the red orb. As you move it, the paragraph below rearranges itself around the obstacle in real time, using @chenglou/pretext to recompute the line breaks every frame.'
 
-const LOREM_BODY = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.`
+// Fragmento (reconstruido) de Ward Farnsworth, *The Socratic Method*
+// (Godine, 2021). El texto encaja con la metáfora visual: el obstáculo
+// no detiene al pensamiento, lo reorganiza.
+const QUOTE = `The Socratic method is not a way of finding answers. It is a way of seeing what you do not yet understand. Faced with a contradiction, the mind has two options: defend the position it already holds, or rearrange itself in the light of what has been said. The first is comfort; the second is thought. Socrates believed only the second has any future.
+
+The method does not promise certainty. It promises movement — small, deliberate, and continual. Each question is a kind of obstacle placed in the path of an opinion, to test whether the opinion can flow around it gracefully or whether it breaks. The opinions that survive are not the ones that resisted; they are the ones that adapted.
+
+To think Socratically, then, is to learn how to be wrong without collapse. It is to recognize that the shape of one's own understanding is provisional, and to make a habit of letting it be redrawn.`
+
+const ATTRIBUTION = '— Ward Farnsworth, The Socratic Method'
 
 export default function PlaygroundPage() {
   return (
@@ -36,9 +45,9 @@ export default function PlaygroundPage() {
             playground
           </h1>
           <ShrinkwrapText
-            text={LOREM_LEAD}
+            text={LEAD}
             fontSize={17}
-            targetLines={3}
+            targetLines={4}
             maxWidth={600}
             className={`${spaceMono.className} text-base sm:text-lg text-gray-300 leading-relaxed`}
           />
@@ -47,15 +56,17 @@ export default function PlaygroundPage() {
         {/*
           La demo en sí: el canvas de reflujo. El obstáculo rojo se arrastra
           y el texto se re-rompe alrededor en tiempo real, vía pretext.
+          El texto es un fragmento de Farnsworth sobre el método socrático
+          — la metáfora visual y el contenido están alineados.
           touch-action: none vive solo dentro del orb, así que el resto de
           la página scrollea normal en mobile.
         */}
         <ClientOnly>
           <ReflowCanvas
-            text={LOREM_BODY}
+            text={QUOTE}
             fontSize={16}
             lineHeight={28}
-            aspect={1.4}
+            aspect={1.2}
             obstacleRadius={88}
             obstacleLabel="drag"
             color="rgb(220, 220, 220)"
@@ -65,8 +76,13 @@ export default function PlaygroundPage() {
           />
         </ClientOnly>
 
-        <p className={`mt-4 text-[11px] uppercase tracking-[0.18em] text-gray-500 ${spaceMono.className} text-center`}>
-          Drag the orb · the text reflows around it
+        <p
+          className={`mt-4 text-right pr-2 text-[11px] uppercase tracking-[0.18em] text-gray-500 ${spaceMono.className}`}
+        >
+          {ATTRIBUTION}
+        </p>
+        <p className={`mt-2 text-[11px] uppercase tracking-[0.18em] text-gray-600 ${spaceMono.className} text-center`}>
+          Drag the orb · the paragraph rearranges around it
         </p>
 
         <hr className="my-16 md:my-20 border-neutral-800" />

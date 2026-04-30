@@ -1,491 +1,219 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import nextDynamic from 'next/dynamic'
+import { useState } from 'react'
 import { Nav } from '@/components/nav'
+import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
-import { effects, getEffectById } from './lib/effects'
-import { DEFAULT_OVERLAY, type OverlayState } from './lib/overlay'
-import { usePatchState } from './hooks/usePatchState'
-import { usePublishPatch } from './hooks/usePublishPatch'
-import { useAudioSource, type UseAudioSourceReturn } from './hooks/useAudioSource'
-import type { Effect, PatchValues } from './lib/types'
-import type { BlendMode } from './lib/blend'
-import { SynthCanvas } from './components/SynthCanvas'
-import { MixCanvas } from './components/MixCanvas'
-import { ControlPanel } from './components/ControlPanel'
-import { EffectPicker } from './components/EffectPicker'
-import { OutputControl } from './components/OutputControl'
-import { AudioPanel } from './components/AudioPanel'
-import { OverlayPanel } from './components/OverlayPanel'
-import { TextOverlay } from './components/TextOverlay'
-import { ModeToggle } from './components/ModeToggle'
-import { MixerBar } from './components/MixerBar'
+import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
-type Mode = 'solo' | 'mix'
+const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
+const spaceMono = Space_Mono({ subsets: ['latin'], weight: ['400'] })
 
-export default function SF01() {
-  const [mode, setMode] = useState<Mode>('solo')
-  const [outputOpen, setOutputOpen] = useState(false)
-  const [overlay, setOverlayState] = useState<OverlayState>(DEFAULT_OVERLAY)
+const VoronoiPreview = nextDynamic(
+  () => import('@/components/sf01/voronoi-preview').then(m => m.VoronoiPreview),
+  { ssr: false, loading: () => <div className="absolute inset-0 bg-neutral-950" /> },
+)
 
-  // Solo mode state
-  const [soloEffectId, setSoloEffectId] = useState<string>(effects[0].id)
-  const [soloResetKey, setSoloResetKey] = useState(0)
-  const soloEffect = getEffectById(soloEffectId) ?? effects[0]
-  const { values: soloValues, setUniform: setSoloUniform } = usePatchState(soloEffect)
+const FEATURES = [
+  {
+    title: 'Dual-deck mix engine',
+    body: 'Two visual decks with crossfader, blend modes, and per-channel feedback loops. Mix shaders the way DJs mix tracks.',
+  },
+  {
+    title: 'Live shader library',
+    body: 'Voronoi, domain warping, reaction-diffusion, raymarched SDFs, moiré. Drop new GLSL effects in minutes.',
+  },
+  {
+    title: 'Audio-reactive everything',
+    body: 'Map any audio band — low, mid, high, level — to any parameter on any deck. Mic input or system audio.',
+  },
+  {
+    title: 'Built for live performance',
+    body: 'Designed for VJ sets, music videos, club projections, gallery installations, livestreams. Zero-latency render.',
+  },
+  {
+    title: 'Open-canvas mapping',
+    body: 'Output to any resolution, any aspect ratio, any number of windows. Designed to stretch across multi-projector setups.',
+  },
+  {
+    title: 'Patch & share',
+    body: 'Save, load, and share patches as JSON. Recall a sound-piece state in one click. Build your own preset library.',
+  },
+]
 
-  // Mix mode state
-  const [deckAId, setDeckAId] = useState<string>(effects[0].id)
-  const [deckBId, setDeckBId] = useState<string>(effects[1]?.id ?? effects[0].id)
-  const deckAEffect = getEffectById(deckAId) ?? effects[0]
-  const deckBEffect = getEffectById(deckBId) ?? effects[0]
-  const { values: deckAValues, setUniform: setDeckAUniform } = usePatchState(deckAEffect)
-  const { values: deckBValues, setUniform: setDeckBUniform } = usePatchState(deckBEffect)
-  const [deckAResetKey, setDeckAResetKey] = useState(0)
-  const [deckBResetKey, setDeckBResetKey] = useState(0)
-  const [crossfade, setCrossfade] = useState(0.5)
-  const [blendMode, setBlendMode] = useState<BlendMode>('crossfade')
-  const [gainA, setGainA] = useState(1)
-  const [gainB, setGainB] = useState(1)
-  const [activeDeck, setActiveDeck] = useState<'A' | 'B'>('A')
-
-  const audio = useAudioSource()
-
-  const setOverlay = useCallback((patch: Partial<OverlayState>) => {
-    setOverlayState((prev) => ({ ...prev, ...patch }))
-  }, [])
-
-  // Active controls (what the ControlPanel edits)
-  const active = useMemo(() => {
-    if (mode === 'solo') {
-      return {
-        effect: soloEffect,
-        values: soloValues,
-        setUniform: setSoloUniform,
-      }
-    }
-    if (activeDeck === 'A') {
-      return {
-        effect: deckAEffect,
-        values: deckAValues,
-        setUniform: setDeckAUniform,
-      }
-    }
-    return {
-      effect: deckBEffect,
-      values: deckBValues,
-      setUniform: setDeckBUniform,
-    }
-  }, [
-    mode,
-    activeDeck,
-    soloEffect,
-    soloValues,
-    setSoloUniform,
-    deckAEffect,
-    deckAValues,
-    setDeckAUniform,
-    deckBEffect,
-    deckBValues,
-    setDeckBUniform,
-  ])
-
-  // Full session object to publish to the output window
-  const session = useMemo<import('./lib/channel').Session>(() => {
-    if (mode === 'solo') {
-      return {
-        mode: 'solo',
-        effectId: soloEffectId,
-        values: soloValues,
-        resetKey: soloResetKey,
-      }
-    }
-    return {
-      mode: 'mix',
-      deckA: { effectId: deckAId, values: deckAValues, resetKey: deckAResetKey },
-      deckB: { effectId: deckBId, values: deckBValues, resetKey: deckBResetKey },
-      crossfade,
-      blendMode,
-      gainA,
-      gainB,
-    }
-  }, [
-    mode,
-    soloEffectId,
-    soloValues,
-    soloResetKey,
-    deckAId,
-    deckAValues,
-    deckAResetKey,
-    deckBId,
-    deckBValues,
-    deckBResetKey,
-    crossfade,
-    blendMode,
-    gainA,
-    gainB,
-  ])
-
-  usePublishPatch({
-    session,
-    overlay,
-    audioActive: audio.isActive,
-    getAudioBands: audio.getBands,
-  })
-
-  const doReset = useCallback(() => {
-    if (mode === 'solo') {
-      setSoloResetKey((k) => k + 1)
-    } else if (activeDeck === 'A') {
-      setDeckAResetKey((k) => k + 1)
-    } else {
-      setDeckBResetKey((k) => k + 1)
-    }
-  }, [mode, activeDeck])
-
-  const resetDeckA = useCallback(() => setDeckAResetKey((k) => k + 1), [])
-  const resetDeckB = useCallback(() => setDeckBResetKey((k) => k + 1), [])
-
-  useEffect(() => {
-    if (!active.effect.feedback) return
-    const handler = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'r' && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        const tag = (e.target as HTMLElement | null)?.tagName
-        if (tag === 'INPUT' || tag === 'TEXTAREA') return
-        doReset()
-      }
-    }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [active.effect.feedback, doReset])
-
-  const deckA = useMemo(
-    () => ({ effect: deckAEffect, values: deckAValues, resetKey: deckAResetKey }),
-    [deckAEffect, deckAValues, deckAResetKey]
-  )
-  const deckB = useMemo(
-    () => ({ effect: deckBEffect, values: deckBValues, resetKey: deckBResetKey }),
-    [deckBEffect, deckBValues, deckBResetKey]
-  )
+export default function SF01Page() {
+  const [density, setDensity] = useState(8)
+  const [motion, setMotion] = useState(0.6)
+  const [hueDrift, setHueDrift] = useState(0.35)
+  const [edge, setEdge] = useState(0.8)
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <main className="relative min-h-screen bg-black text-white">
       <Nav />
 
-      <div className="flex-1 flex flex-col min-h-0 relative">
-        <header className="flex items-center gap-3 px-4 py-3 border-b border-white/10 shrink-0 bg-black">
-          <span className="font-mono text-xs uppercase tracking-[0.22em] text-white/50">
-            SF-01
-          </span>
-          <div className="h-4 w-px bg-white/15" />
-          <ModeToggle mode={mode} onChange={setMode} />
-          <div className="h-4 w-px bg-white/15" />
-          {mode === 'solo' ? (
-            <EffectPicker currentId={soloEffectId} onChange={setSoloEffectId} />
-          ) : (
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-              Editing: Deck {activeDeck} · {active.effect.name}
-            </span>
-          )}
-          {active.effect.feedback && (
-            <button
-              type="button"
-              onClick={doReset}
-              title={`Reset ${mode === 'mix' ? `Deck ${activeDeck}` : ''} (R)`}
-              className="flex items-center gap-2 px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] bg-red-600 hover:bg-red-500 text-white border border-red-400/50 shadow-[0_0_10px_rgba(239,68,68,0.35)] transition-all active:scale-95"
-            >
-              <RotateCcw size={12} />
-              Reset
-              <span className="text-[9px] opacity-50 ml-0.5">[R]</span>
-            </button>
-          )}
-          <div className="ml-auto">
-            <OutputControl isOpen={outputOpen} setIsOpen={setOutputOpen} />
+      <article className="max-w-6xl mx-auto px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+        {/* Hero */}
+        <header className="mb-12 md:mb-16 max-w-3xl">
+          <div className="flex items-center gap-3 mb-5">
+            <span className="block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            <p className={`text-[11px] uppercase tracking-[0.22em] text-red-500 ${spaceMono.className}`}>
+              SF-01 · Coming Q3 2026
+            </p>
           </div>
+          <h1
+            className={`text-5xl sm:text-6xl md:text-7xl font-light tracking-wider mb-6 ${microgramma.className}`}
+          >
+            sf-01
+          </h1>
+          <p className={`${spaceMono.className} text-lg sm:text-xl text-gray-300 leading-relaxed`}>
+            A live visual synthesizer for performers, designers, and image-makers
+            who want their visuals to <span className="text-white">move with the moment</span>.
+          </p>
+          <p className={`${spaceMono.className} mt-4 text-sm sm:text-base text-gray-500 leading-relaxed max-w-2xl`}>
+            Mix two GLSL shader decks like a DJ. Map audio to any parameter. Drop
+            visuals into music videos, club nights, gallery walls, livestreams,
+            festival stages — anything that wants to react. Below: a tiny taste —
+            one shader, four knobs.
+          </p>
         </header>
 
-        {mode === 'mix' && (
-          <MixerBar
-            deckAId={deckAId}
-            deckBId={deckBId}
-            onDeckAChange={setDeckAId}
-            onDeckBChange={setDeckBId}
-            crossfade={crossfade}
-            onCrossfadeChange={setCrossfade}
-            blendMode={blendMode}
-            onBlendModeChange={setBlendMode}
-            gainA={gainA}
-            onGainAChange={setGainA}
-            gainB={gainB}
-            onGainBChange={setGainB}
-            deckAHasFeedback={!!deckAEffect.feedback}
-            deckBHasFeedback={!!deckBEffect.feedback}
-            onResetA={resetDeckA}
-            onResetB={resetDeckB}
-            activeDeck={activeDeck}
-            onActiveDeckChange={setActiveDeck}
-          />
-        )}
+        {/* Demo */}
+        <section className="mb-16 md:mb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 lg:items-stretch">
+            {/* Canvas */}
+            <div className="lg:col-span-2">
+              <div className="relative w-full aspect-[16/10] rounded-[20px] overflow-hidden border border-neutral-800 bg-neutral-950">
+                <ClientOnly>
+                  <VoronoiPreview controls={{ density, motion, hueDrift, edge }} />
+                </ClientOnly>
+                {/* Esquina con label del shader */}
+                <div className="absolute top-3 left-3 flex items-center gap-2 z-10 pointer-events-none">
+                  <span className="block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className={`text-[10px] uppercase tracking-[0.18em] text-white/70 ${spaceMono.className}`}>
+                    Voronoi · Live preview
+                  </span>
+                </div>
+                <div className={`absolute bottom-3 right-3 text-[10px] uppercase tracking-[0.18em] text-white/40 ${spaceMono.className} pointer-events-none`}>
+                  GLSL · 60fps
+                </div>
+              </div>
+            </div>
 
-        <SystemBar
-          audio={audio}
-          activeEffectName={active.effect.name}
-          overlay={overlay}
-          outputOpen={outputOpen}
-          mode={mode}
-          mixInfo={
-            mode === 'mix'
-              ? {
-                  deckA: deckAEffect.name,
-                  deckB: deckBEffect.name,
-                  crossfade,
-                  blendMode,
-                }
-              : null
-          }
-        />
-
-        {outputOpen ? (
-          <ExpandedLayout
-            audio={audio}
-            overlay={overlay}
-            setOverlay={setOverlay}
-            effect={active.effect}
-            values={active.values}
-            setUniform={active.setUniform}
-            mode={mode}
-            activeDeck={activeDeck}
-          />
-        ) : (
-          <StandardLayout
-            audio={audio}
-            overlay={overlay}
-            setOverlay={setOverlay}
-            mode={mode}
-            soloEffect={soloEffect}
-            soloValues={soloValues}
-            soloResetKey={soloResetKey}
-            deckA={deckA}
-            deckB={deckB}
-            crossfade={crossfade}
-            blendMode={blendMode}
-            gainA={gainA}
-            gainB={gainB}
-            activeDeck={activeDeck}
-            controlEffect={active.effect}
-            controlValues={active.values}
-            controlSetUniform={active.setUniform}
-          />
-        )}
-      </div>
-    </div>
-  )
-}
-
-type StandardProps = {
-  audio: UseAudioSourceReturn
-  overlay: OverlayState
-  setOverlay: (patch: Partial<OverlayState>) => void
-  mode: Mode
-  soloEffect: Effect
-  soloValues: PatchValues
-  soloResetKey: number
-  deckA: { effect: Effect; values: PatchValues; resetKey: number }
-  deckB: { effect: Effect; values: PatchValues; resetKey: number }
-  crossfade: number
-  blendMode: BlendMode
-  gainA: number
-  gainB: number
-  activeDeck: 'A' | 'B'
-  controlEffect: Effect
-  controlValues: PatchValues
-  controlSetUniform: (name: string, value: number | [number, number, number]) => void
-}
-
-function StandardLayout({
-  audio,
-  overlay,
-  setOverlay,
-  mode,
-  soloEffect,
-  soloValues,
-  soloResetKey,
-  deckA,
-  deckB,
-  crossfade,
-  blendMode,
-  gainA,
-  gainB,
-  activeDeck,
-  controlEffect,
-  controlValues,
-  controlSetUniform,
-}: StandardProps) {
-  return (
-    <div className="flex-1 flex min-h-0">
-      <div className="flex-1 relative overflow-hidden">
-        <ClientOnly>
-          {mode === 'solo' ? (
-            <SynthCanvas
-              effect={soloEffect}
-              values={soloValues}
-              resetKey={soloResetKey}
-              audioRef={audio.bandsRef}
-            />
-          ) : (
-            <MixCanvas
-              deckA={deckA}
-              deckB={deckB}
-              crossfade={crossfade}
-              blendMode={blendMode}
-              gainA={gainA}
-              gainB={gainB}
-              audioRef={audio.bandsRef}
-            />
-          )}
-        </ClientOnly>
-        <TextOverlay overlay={overlay} />
-      </div>
-
-      <aside className="flex flex-col w-[340px] shrink-0 border-l border-white/10 overflow-y-auto bg-black">
-        <AudioPanel audio={audio} />
-        <OverlayPanel overlay={overlay} setOverlay={setOverlay} />
-        {mode === 'mix' && (
-          <div className="px-4 py-2 bg-white/[0.015] border-b border-white/10 font-mono text-[10px] uppercase tracking-[0.2em]">
-            <span className="text-white/40">Editing </span>
-            <span className="text-lime-400">Deck {activeDeck}</span>
+            {/* Controls */}
+            <aside className="lg:col-span-1">
+              <div className={`${spaceMono.className} space-y-5 lg:sticky lg:top-24`}>
+                <p className="text-[10px] uppercase tracking-[0.18em] text-red-500">
+                  Demo controls
+                </p>
+                <Slider label="Density" value={density} min={1.5} max={20} step={0.1} onChange={setDensity} />
+                <Slider label="Motion" value={motion} min={0} max={2.5} step={0.01} onChange={setMotion} />
+                <Slider label="Hue Drift" value={hueDrift} min={0} max={1} step={0.01} onChange={setHueDrift} />
+                <Slider label="Edge" value={edge} min={0} max={2} step={0.01} onChange={setEdge} />
+                <p className="pt-2 text-[10px] uppercase tracking-[0.18em] text-gray-500 leading-relaxed">
+                  This is one shader of many — and one preset of infinite. The full
+                  SF-01 ships with the dual-deck mixer, audio bands, blend modes
+                  and live patching.
+                </p>
+              </div>
+            </aside>
           </div>
-        )}
-        <ControlPanel
-          effect={controlEffect}
-          values={controlValues}
-          setUniform={controlSetUniform}
-        />
-      </aside>
-    </div>
-  )
-}
+        </section>
 
-type ExpandedProps = {
-  audio: UseAudioSourceReturn
-  overlay: OverlayState
-  setOverlay: (patch: Partial<OverlayState>) => void
-  effect: Effect
-  values: PatchValues
-  setUniform: (name: string, value: number | [number, number, number]) => void
-  mode: Mode
-  activeDeck: 'A' | 'B'
-}
-
-function ExpandedLayout({
-  audio,
-  overlay,
-  setOverlay,
-  effect,
-  values,
-  setUniform,
-  mode,
-  activeDeck,
-}: ExpandedProps) {
-  return (
-    <div className="flex-1 grid grid-cols-1 md:grid-cols-[minmax(320px,1fr)_minmax(320px,1fr)_minmax(380px,1.3fr)] min-h-0 bg-black">
-      <div className="overflow-y-auto border-r border-white/10">
-        <AudioPanel audio={audio} />
-      </div>
-      <div className="overflow-y-auto border-r border-white/10">
-        <OverlayPanel overlay={overlay} setOverlay={setOverlay} />
-      </div>
-      <div className="overflow-y-auto">
-        {mode === 'mix' && (
-          <div className="px-4 py-2 bg-white/[0.015] border-b border-white/10 font-mono text-[10px] uppercase tracking-[0.2em]">
-            <span className="text-white/40">Editing </span>
-            <span className="text-lime-400">Deck {activeDeck}</span>
+        {/* Features */}
+        <section className="mb-16 md:mb-20">
+          <p className={`text-[11px] uppercase tracking-[0.22em] text-red-500 ${spaceMono.className} mb-6`}>
+            What ships in v1
+          </p>
+          <h2 className={`text-3xl sm:text-4xl font-light tracking-wider mb-10 max-w-2xl ${microgramma.className}`}>
+            a synth for visuals
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8 max-w-4xl">
+            {FEATURES.map(({ title, body }) => (
+              <div key={title} className="space-y-2">
+                <h3 className={`text-base text-white ${spaceMono.className} tracking-wide`}>
+                  {title}
+                </h3>
+                <p className="text-sm text-gray-400 leading-relaxed">{body}</p>
+              </div>
+            ))}
           </div>
-        )}
-        <ControlPanel effect={effect} values={values} setUniform={setUniform} />
-      </div>
-    </div>
+        </section>
+
+        {/* CTA / Status */}
+        <section className="border-t border-neutral-900 pt-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+            <div className="space-y-2">
+              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+                Status
+              </p>
+              <p className="text-base text-white">In active development</p>
+              <p className="text-sm text-gray-500">Internal builds running. Performance-tested on macOS, Windows, browser.</p>
+            </div>
+            <div className="space-y-2">
+              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+                Public release
+              </p>
+              <p className="text-base text-white">Q3 2026</p>
+              <p className="text-sm text-gray-500">Closed beta opens earlier — drop a line if you want a key.</p>
+            </div>
+            <div className="space-y-2">
+              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+                For who
+              </p>
+              <p className="text-base text-white">VJs, motion designers, devs</p>
+              <p className="text-sm text-gray-500">Anyone whose visuals want to listen.</p>
+            </div>
+          </div>
+        </section>
+      </article>
+
+      <ClientOnly>
+        <Footer />
+      </ClientOnly>
+    </main>
   )
 }
 
-function SystemBar({
-  audio,
-  activeEffectName,
-  overlay,
-  outputOpen,
-  mode,
-  mixInfo,
-}: {
-  audio: UseAudioSourceReturn
-  activeEffectName: string
-  overlay: OverlayState
-  outputOpen: boolean
-  mode: Mode
-  mixInfo: { deckA: string; deckB: string; crossfade: number; blendMode: BlendMode } | null
-}) {
-  return (
-    <div className="shrink-0 flex items-center gap-4 px-4 py-1.5 bg-white/[0.02] border-b border-white/5 font-mono text-[9px] uppercase tracking-[0.18em] text-white/40 overflow-x-auto">
-      <StatusCell label="Mode" value={mode === 'mix' ? 'MIX' : 'SOLO'} highlight={mode === 'mix'} />
-      <StatusCell
-        label="Out"
-        value={outputOpen ? 'EXT WINDOW' : 'LOCAL'}
-        highlight={outputOpen}
-      />
-      <StatusCell
-        label="Audio"
-        value={
-          audio.source === 'mic'
-            ? 'MIC'
-            : audio.source === 'file'
-              ? 'FILE'
-              : 'OFF'
-        }
-        highlight={audio.isActive}
-      />
-      {mixInfo ? (
-        <>
-          <StatusCell label="A" value={mixInfo.deckA} />
-          <StatusCell
-            label="xFade"
-            value={mixInfo.crossfade.toFixed(2)}
-            highlight
-          />
-          <StatusCell label="B" value={mixInfo.deckB} />
-          <StatusCell label="Blend" value={mixInfo.blendMode.toUpperCase()} />
-        </>
-      ) : (
-        <StatusCell label="Effect" value={activeEffectName} />
-      )}
-      <StatusCell
-        label="Overlay"
-        value={overlay.enabled ? 'ON' : 'OFF'}
-        highlight={overlay.enabled}
-      />
-      <span className="ml-auto text-[9px] text-white/25">SF-01 · v0.3</span>
-    </div>
-  )
-}
-
-function StatusCell({
-  label,
-  value,
-  highlight,
-}: {
+interface SliderProps {
   label: string
-  value: string
-  highlight?: boolean
-}) {
+  value: number
+  min: number
+  max: number
+  step: number
+  onChange: (v: number) => void
+}
+
+function Slider({ label, value, min, max, step, onChange }: SliderProps) {
+  const pct = ((value - min) / (max - min)) * 100
   return (
-    <span className="flex items-center gap-1.5 shrink-0">
-      <span className="text-white/30">{label}</span>
-      <span
-        className={`tabular-nums ${
-          highlight ? 'text-lime-400' : 'text-white/70'
-        }`}
-      >
-        {value}
-      </span>
-    </span>
+    <div className="space-y-2">
+      <div className="flex justify-between items-baseline">
+        <label className="text-[10px] uppercase tracking-[0.18em] text-gray-400">
+          {label}
+        </label>
+        <span className="text-[11px] text-white tabular-nums">{value.toFixed(2)}</span>
+      </div>
+      <div className="relative h-1 rounded-full bg-neutral-800">
+        <div
+          className="absolute inset-y-0 left-0 rounded-full bg-red-500"
+          style={{ width: `${pct}%` }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          aria-label={label}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-red-500 ring-2 ring-black pointer-events-none"
+          style={{ left: `${pct}%` }}
+        />
+      </div>
+    </div>
   )
 }
