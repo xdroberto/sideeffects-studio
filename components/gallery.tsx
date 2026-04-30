@@ -124,7 +124,7 @@ export function Gallery() {
             return (
               <MotionDiv
                 key={artwork.id}
-                className={`relative cursor-pointer bg-neutral-900 overflow-hidden group ${artwork.featured ? 'col-span-2 row-span-2' : ''}`}
+                className={`relative cursor-pointer bg-neutral-900 overflow-hidden rounded-[20px] group ${artwork.featured ? 'col-span-2 row-span-2' : ''}`}
                 onClick={() => setSelectedArtwork(artwork)}
                 whileHover={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
