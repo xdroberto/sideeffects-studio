@@ -92,16 +92,16 @@ export function DragObstacle({
     document.body.style.cursor = 'grabbing'
   }
 
-  // Visual: silueta minimalista de busto griego (perfil con barba)
-  // dentro de un círculo rojo. Mantiene la forma circular para que
-  // la matemática del obstáculo (computeFreeRanges) siga siendo
-  // exacta — solo cambia lo que se ve.
+  // Visual: busto de filósofo (game-icons.net "philosopher-bust" by
+  // Delapouite, CC BY 3.0). El círculo rojo de fondo conserva la
+  // matemática del obstáculo (computeFreeRanges) intacta — solo el
+  // glifo del centro cambia.
   return (
     <button
       ref={ref}
       type="button"
       onPointerDown={onPointerDown}
-      aria-label="Drag the bust. The text reflows around it."
+      aria-label="Drag the philosopher. The text reflows around it."
       style={{
         position: 'absolute',
         left: `${cx - radius}px`,
@@ -121,59 +121,29 @@ export function DragObstacle({
         animation: 'orb-pulse 3s ease-in-out infinite',
       }}
     >
-      {/* Silueta de busto griego — SVG minimalista, perfil derecho */}
+      {/* Busto del filósofo — game-icons.net `philosopher-bust` por
+          Delapouite, licencia CC BY 3.0. */}
       <svg
-        viewBox="0 0 100 100"
-        width="100%"
-        height="100%"
-        style={{ display: 'block', pointerEvents: 'none' }}
+        viewBox="0 0 512 512"
+        width="68%"
+        height="68%"
+        style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          display: 'block',
+          pointerEvents: 'none',
+          color: ringColor,
+          filter: `drop-shadow(0 2px 6px ${shade(color, -65)})`,
+        }}
         aria-hidden
       >
-        <defs>
-          <radialGradient id="bust-shade" cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={ringColor} stopOpacity="0" />
-            <stop offset="100%" stopColor="#000" stopOpacity="0.35" />
-          </radialGradient>
-        </defs>
-        {/* Sombreado interno para profundidad */}
-        <circle cx="50" cy="50" r="50" fill="url(#bust-shade)" />
-        {/* Busto (perfil mirando a la derecha) — formas geometricas
-            que sugieren cabeza, nariz, barba y hombros sin pretender
-            realismo. */}
-        <g fill={ringColor} fillOpacity="0.92">
-          {/* Cabeza + frente + nariz */}
-          <path d="M 38,28
-                   C 32,28 27,34 27,42
-                   C 27,48 28,52 30,55
-                   L 30,58
-                   L 33,60
-                   L 37,58
-                   L 37,55
-                   L 41,52
-                   L 41,49
-                   L 38,46
-                   L 41,44
-                   L 41,40
-                   C 41,32 39,28 38,28 Z" />
-          {/* Barba */}
-          <path d="M 30,58
-                   C 26,62 24,68 24,72
-                   L 24,78
-                   L 28,82
-                   L 33,80
-                   L 36,78
-                   L 38,72
-                   L 37,66
-                   L 37,58
-                   L 33,60 Z" />
-          {/* Cuello + hombros */}
-          <path d="M 22,82
-                   L 22,92
-                   L 60,92
-                   L 60,82
-                   C 56,78 50,76 44,76
-                   C 38,76 32,78 28,80 Z" />
-        </g>
+        <path
+          fill="currentColor"
+          fillOpacity="0.94"
+          d="M256 37.4c-28.1 0-50.9 21.3-50.9 59.9c0 29.8 12.9 58.3 12.9 58.3l15-18.5h12.6v-22.7H218V93.5h76v20.9h-27.6v22.7H279l15 18.5s12.9-28.5 12.9-58.3c0-38.6-22.8-59.9-50.9-59.9m-66.9 72.5c-1.3 8.7-1.9 17.8-1.9 27.2c0 64.2 30.8 106.4 68.8 106.4s68.8-42.2 68.8-106.4c0-9.4-.6-18.5-1.9-27.2c-2.8 28.3-13.7 52.6-13.7 52.6L298.1 187l-27-33.2h-30.2l-27 33.2l-11.1-24.5s-10.9-24.3-13.7-52.6m58.6 53.7h16.6v12.7h-16.6zm71 19.7v.2zm-145.5 5l-36.9 9.3L168 339.4h61.8l24-75.1c-34.7-1.2-66.9-28.9-80.6-76m165.6 0c-10.5 36.2-32 61-57.2 71L256 339.4h21.7l20.7-70.4l12 3.5l-19.6 66.9h16.9l36.4-125.8l12 3.5l-35.4 122.3H344l31.7-141.8zM197 360.6v94h18v-64h82v64h18v-94zm36 48v46h46v-46zm-69.3 64l-14 18h212.6l-14-18z"
+        />
       </svg>
       <style>{`
         @keyframes orb-pulse {

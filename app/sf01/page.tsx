@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
+import { PalettePicker, PRESET_PALETTES, type PaletteHexes } from '@/components/sf01/palette-picker'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
@@ -47,18 +48,16 @@ export default function SF01Page() {
   const [motion, setMotion] = useState(0.6)
   const [hueDrift, setHueDrift] = useState(0.35)
   const [edge, setEdge] = useState(0.8)
-  const [colorA, setColorA] = useState('#0c0a1f')
-  const [colorB, setColorB] = useState('#e66526')
-  const [edgeColor, setEdgeColor] = useState('#fff2cc')
+  const [palette, setPalette] = useState<PaletteHexes>(PRESET_PALETTES[0]!.colors)
 
   const controls = {
     density,
     motion,
     hueDrift,
     edge,
-    colorA: hexToRgb01(colorA),
-    colorB: hexToRgb01(colorB),
-    edgeColor: hexToRgb01(edgeColor),
+    colorA: hexToRgb01(palette.a),
+    colorB: hexToRgb01(palette.b),
+    edgeColor: hexToRgb01(palette.edge),
   }
 
   return (
@@ -123,15 +122,12 @@ export default function SF01Page() {
                 <Slider label="Hue drift" value={hueDrift} min={0} max={1} step={0.01} onChange={setHueDrift} />
                 <Slider label="Edge" value={edge} min={0} max={2} step={0.01} onChange={setEdge} />
 
-                <div className="pt-2 border-t border-neutral-900 space-y-3">
-                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
-                    Palette
-                  </p>
-                  <div className="grid grid-cols-3 gap-3">
-                    <ColorSwatch label="A" value={colorA} onChange={setColorA} />
-                    <ColorSwatch label="B" value={colorB} onChange={setColorB} />
-                    <ColorSwatch label="Edge" value={edgeColor} onChange={setEdgeColor} />
-                  </div>
+                <div className="pt-2 border-t border-neutral-900">
+                  <PalettePicker
+                    value={palette}
+                    onChange={setPalette}
+                    fontClassName={spaceMono.className}
+                  />
                 </div>
 
                 <p className="pt-2 text-[10px] uppercase tracking-[0.18em] text-gray-500 leading-relaxed">
@@ -240,33 +236,6 @@ function Slider({ label, value, min, max, step, onChange }: SliderProps) {
         />
       </div>
     </div>
-  )
-}
-
-interface ColorSwatchProps {
-  label: string
-  value: string
-  onChange: (v: string) => void
-}
-
-function ColorSwatch({ label, value, onChange }: ColorSwatchProps) {
-  return (
-    <label className="relative block cursor-pointer group">
-      <span className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5">
-        {label}
-      </span>
-      <span
-        className="block w-full h-9 rounded-md border border-neutral-700 group-hover:border-neutral-500 transition-colors"
-        style={{ backgroundColor: value }}
-      />
-      <input
-        type="color"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        aria-label={`Color ${label}`}
-        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-      />
-    </label>
   )
 }
 

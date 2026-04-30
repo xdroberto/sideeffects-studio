@@ -74,6 +74,32 @@ export default function LicensingPage() {
         </section>
 
         <section>
+          <h2 className="text-white text-lg font-light tracking-wider mb-3">Third-Party Assets</h2>
+          <p>
+            The &quot;philosopher bust&quot; icon used in the playground page is by Delapouite
+            via{' '}
+            <a
+              href="https://game-icons.net/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-500 hover:text-red-400 transition-colors"
+            >
+              game-icons.net
+            </a>
+            , licensed under{' '}
+            <a
+              href="https://creativecommons.org/licenses/by/3.0/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-red-500 hover:text-red-400 transition-colors"
+            >
+              CC BY 3.0
+            </a>
+            .
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-white text-lg font-light tracking-wider mb-3">Prohibited Uses</h2>
           <p>
             Without explicit written permission, you may not:
