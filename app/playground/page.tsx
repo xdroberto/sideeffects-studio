@@ -66,8 +66,8 @@ export default function PlaygroundPage() {
             text={QUOTE}
             fontSize={16}
             lineHeight={28}
-            aspect={1.2}
-            obstacleRadius={88}
+            aspect={2.4}
+            obstacleRadius={84}
             obstacleLabel="drag"
             color="rgb(220, 220, 220)"
             obstacleColor="#dc2626"

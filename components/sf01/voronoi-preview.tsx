@@ -20,6 +20,12 @@ export interface VoronoiControls {
   motion: number
   hueDrift: number
   edge: number
+  /** Color A — vec3 normalizado [r, g, b] en 0..1. */
+  colorA: [number, number, number]
+  /** Color B — vec3 normalizado. */
+  colorB: [number, number, number]
+  /** Color del borde — vec3 normalizado. */
+  edgeColor: [number, number, number]
 }
 
 interface VoronoiPreviewProps {
@@ -63,6 +69,9 @@ function VoronoiMesh({ controls }: { controls: VoronoiControls }) {
     material.uniforms.u_motion.value = controls.motion
     material.uniforms.u_hueDrift.value = controls.hueDrift
     material.uniforms.u_edgeIntensity.value = controls.edge
+    ;(material.uniforms.u_colorA.value as THREE.Vector3).fromArray(controls.colorA)
+    ;(material.uniforms.u_colorB.value as THREE.Vector3).fromArray(controls.colorB)
+    ;(material.uniforms.u_edgeColor.value as THREE.Vector3).fromArray(controls.edgeColor)
     // Audio fijo en cero — sin micrófono en el preview público.
     ;(material.uniforms.u_audio.value as THREE.Vector4).set(0, 0, 0, 0)
   })

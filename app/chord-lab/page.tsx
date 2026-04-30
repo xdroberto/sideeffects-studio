@@ -1,10 +1,17 @@
 'use client'
 
+import nextDynamic from 'next/dynamic'
 import { useEffect, useRef, useState } from 'react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
+
+const DisplayVisualizer = nextDynamic(
+  () =>
+    import('@/components/chord-lab/display-visualizer').then(m => m.DisplayVisualizer),
+  { ssr: false, loading: () => null },
+)
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
 const spaceMono = Space_Mono({ subsets: ['latin'], weight: ['400'] })
@@ -80,27 +87,27 @@ export default function ChordLabPage() {
 
         {/* Status */}
         <section className="border-t border-neutral-900 pt-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="space-y-2">
               <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
                 Status
               </p>
-              <p className="text-base text-white">UI prototype</p>
-              <p className="text-sm text-gray-500">Audio engine wired internally. Public UI in progress.</p>
+              <p className="text-base text-white">UI prototype · Q3 2026</p>
+              <p className="text-sm text-gray-500">
+                Audio engine wired internally. Public UI in progress. Will ship as
+                a standalone web app and an embeddable widget.
+              </p>
             </div>
             <div className="space-y-2">
               <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
-                Public release
+                Who is it for
               </p>
-              <p className="text-base text-white">Q3 2026</p>
-              <p className="text-sm text-gray-500">Standalone web app + embeddable widget.</p>
-            </div>
-            <div className="space-y-2">
-              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
-                For who
+              <p className="text-base text-white">Anyone who hears chords better than they read them.</p>
+              <p className="text-sm text-gray-500">
+                Producers stuck on the same three chords; teachers explaining
+                voice-leading; songwriters chasing a feeling. The toy is the
+                same — the use is yours.
               </p>
-              <p className="text-base text-white">Producers, teachers, songwriters</p>
-              <p className="text-sm text-gray-500">Anyone who hears chords better than they read them.</p>
             </div>
           </div>
         </section>
@@ -272,53 +279,69 @@ function ToggleLed({
 }
 
 /**
- * Pantalla central tipo display LCD/OLED. Muestra "OFF" parpadeando
- * con un cursor, y debajo una breve descripción de lo que vendrá.
+ * Pantalla central tipo display LCD/OLED. Visualizador auto-running
+ * (waveform + spectrum bars) en modo "demo" para sugerir que el toy
+ * reaccionaría a la música cuando esté completo. Auto-cicla por unos
+ * acordes para que se sienta vivo.
  */
 function Display() {
-  const [blink, setBlink] = useState(true)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState<{ w: number; h: number }>({ w: 280, h: 110 })
+  const [chordIdx, setChordIdx] = useState(0)
+  const chords = ['I', 'IV', 'V', 'vi'] as const
 
+  // Medir el ancho del display al montar y al resize.
   useEffect(() => {
-    intervalRef.current = setInterval(() => setBlink(b => !b), 700)
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+    const el = wrapperRef.current
+    if (!el) return
+    const measure = () => {
+      const rect = el.getBoundingClientRect()
+      setSize({
+        w: Math.max(120, Math.round(rect.width - 24)),
+        h: 96,
+      })
     }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
+  // Auto-cycle del acorde cada ~1.6s
+  useEffect(() => {
+    const id = setInterval(() => setChordIdx(i => (i + 1) % chords.length), 1600)
+    return () => clearInterval(id)
+  }, [chords.length])
+
+  const currentChord = chords[chordIdx]
+
   return (
-    <div className="flex-1 rounded-2xl bg-neutral-950 border border-neutral-800/80 px-4 py-4 sm:px-6 sm:py-5 shadow-[inset_0_4px_12px_rgba(0,0,0,0.85)]">
-      <div className="flex items-center justify-between mb-3">
+    <div
+      ref={wrapperRef}
+      className="flex-1 min-w-0 rounded-2xl bg-neutral-950 border border-neutral-800/80 px-3 py-3 sm:px-4 sm:py-4 shadow-[inset_0_4px_12px_rgba(0,0,0,0.85)]"
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between mb-2">
         <span className={`text-[9px] uppercase tracking-[0.22em] text-green-500/80 ${spaceMono.className}`}>
-          display
+          demo · auto
         </span>
-        <span className={`text-[9px] uppercase tracking-[0.22em] text-green-500/40 ${spaceMono.className}`}>
-          ▮▮▮▮ ░░░░
-        </span>
-      </div>
-
-      <div className="flex items-baseline gap-2 mb-3">
-        <span
-          className={`text-3xl sm:text-4xl tracking-[0.2em] text-green-400 ${spaceMono.className}`}
-          style={{ textShadow: '0 0 14px rgba(74, 222, 128, 0.4)' }}
-        >
-          OFF
-        </span>
-        <span
-          className={`text-3xl sm:text-4xl text-green-400 ${blink ? 'opacity-100' : 'opacity-0'} transition-opacity`}
-          style={{ textShadow: '0 0 14px rgba(74, 222, 128, 0.4)' }}
-        >
-          _
+        <span className={`text-[9px] tabular-nums text-green-500/60 ${spaceMono.className}`}>
+          {currentChord}
         </span>
       </div>
 
-      <p
-        className={`text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-green-500/70 leading-relaxed ${spaceMono.className}`}
-      >
-        Power off · awaiting firmware
-        <br />
-        Public release Q3 2026
-      </p>
+      {/* Visualizer */}
+      <DisplayVisualizer width={size.w} height={size.h} chordLabel={currentChord} />
+
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-2">
+        <span className={`text-[9px] uppercase tracking-[0.18em] text-green-500/60 ${spaceMono.className}`}>
+          awaiting firmware
+        </span>
+        <span className={`text-[9px] uppercase tracking-[0.18em] text-green-500/40 ${spaceMono.className}`}>
+          q3 2026
+        </span>
+      </div>
     </div>
   )
 }

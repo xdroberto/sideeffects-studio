@@ -92,12 +92,16 @@ export function DragObstacle({
     document.body.style.cursor = 'grabbing'
   }
 
+  // Visual: silueta minimalista de busto griego (perfil con barba)
+  // dentro de un círculo rojo. Mantiene la forma circular para que
+  // la matemática del obstáculo (computeFreeRanges) siga siendo
+  // exacta — solo cambia lo que se ve.
   return (
     <button
       ref={ref}
       type="button"
       onPointerDown={onPointerDown}
-      aria-label="Drag obstacle. The text reflows around it."
+      aria-label="Drag the bust. The text reflows around it."
       style={{
         position: 'absolute',
         left: `${cx - radius}px`,
@@ -105,31 +109,76 @@ export function DragObstacle({
         width: `${radius * 2}px`,
         height: `${radius * 2}px`,
         borderRadius: '50%',
-        background: `radial-gradient(circle at 35% 30%, ${color}, ${shade(color, -30)} 75%, ${shade(color, -55)})`,
-        border: `1px solid ${ringColor}33`,
-        boxShadow: `0 0 0 1px ${ringColor}1a, 0 12px 40px ${color}44, inset 0 0 30px ${color}55`,
+        background: `radial-gradient(circle at 30% 28%, ${shade(color, 18)}, ${color} 55%, ${shade(color, -45)})`,
+        border: `1px solid ${ringColor}26`,
+        boxShadow: `0 0 0 1px ${ringColor}14, 0 14px 44px ${color}4d, inset 0 0 38px ${shade(color, -55)}`,
         cursor: 'grab',
         touchAction: 'none',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         padding: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: ringColor,
-        fontSize: '10px',
-        fontFamily: 'inherit',
-        letterSpacing: '0.18em',
-        textTransform: 'uppercase',
-        // Pulso sutil en reposo para indicar interactividad.
-        animation: 'orb-pulse 2.6s ease-in-out infinite',
+        overflow: 'hidden',
+        animation: 'orb-pulse 3s ease-in-out infinite',
       }}
     >
-      {label && <span style={{ pointerEvents: 'none', opacity: 0.85 }}>{label}</span>}
+      {/* Silueta de busto griego — SVG minimalista, perfil derecho */}
+      <svg
+        viewBox="0 0 100 100"
+        width="100%"
+        height="100%"
+        style={{ display: 'block', pointerEvents: 'none' }}
+        aria-hidden
+      >
+        <defs>
+          <radialGradient id="bust-shade" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stopColor={ringColor} stopOpacity="0" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0.35" />
+          </radialGradient>
+        </defs>
+        {/* Sombreado interno para profundidad */}
+        <circle cx="50" cy="50" r="50" fill="url(#bust-shade)" />
+        {/* Busto (perfil mirando a la derecha) — formas geometricas
+            que sugieren cabeza, nariz, barba y hombros sin pretender
+            realismo. */}
+        <g fill={ringColor} fillOpacity="0.92">
+          {/* Cabeza + frente + nariz */}
+          <path d="M 38,28
+                   C 32,28 27,34 27,42
+                   C 27,48 28,52 30,55
+                   L 30,58
+                   L 33,60
+                   L 37,58
+                   L 37,55
+                   L 41,52
+                   L 41,49
+                   L 38,46
+                   L 41,44
+                   L 41,40
+                   C 41,32 39,28 38,28 Z" />
+          {/* Barba */}
+          <path d="M 30,58
+                   C 26,62 24,68 24,72
+                   L 24,78
+                   L 28,82
+                   L 33,80
+                   L 36,78
+                   L 38,72
+                   L 37,66
+                   L 37,58
+                   L 33,60 Z" />
+          {/* Cuello + hombros */}
+          <path d="M 22,82
+                   L 22,92
+                   L 60,92
+                   L 60,82
+                   C 56,78 50,76 44,76
+                   C 38,76 32,78 28,80 Z" />
+        </g>
+      </svg>
       <style>{`
         @keyframes orb-pulse {
-          0%, 100% { box-shadow: 0 0 0 1px ${ringColor}1a, 0 12px 40px ${color}44, inset 0 0 30px ${color}55; }
-          50% { box-shadow: 0 0 0 1px ${ringColor}33, 0 16px 48px ${color}66, inset 0 0 36px ${color}77; }
+          0%, 100% { box-shadow: 0 0 0 1px ${ringColor}14, 0 14px 44px ${color}4d, inset 0 0 38px ${shade(color, -55)}; }
+          50% { box-shadow: 0 0 0 1px ${ringColor}33, 0 18px 52px ${color}66, inset 0 0 44px ${shade(color, -55)}; }
         }
       `}</style>
     </button>

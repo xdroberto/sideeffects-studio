@@ -47,6 +47,19 @@ export default function SF01Page() {
   const [motion, setMotion] = useState(0.6)
   const [hueDrift, setHueDrift] = useState(0.35)
   const [edge, setEdge] = useState(0.8)
+  const [colorA, setColorA] = useState('#0c0a1f')
+  const [colorB, setColorB] = useState('#e66526')
+  const [edgeColor, setEdgeColor] = useState('#fff2cc')
+
+  const controls = {
+    density,
+    motion,
+    hueDrift,
+    edge,
+    colorA: hexToRgb01(colorA),
+    colorB: hexToRgb01(colorB),
+    edgeColor: hexToRgb01(edgeColor),
+  }
 
   return (
     <main className="relative min-h-screen bg-black text-white">
@@ -71,10 +84,10 @@ export default function SF01Page() {
             who want their visuals to <span className="text-white">move with the moment</span>.
           </p>
           <p className={`${spaceMono.className} mt-4 text-sm sm:text-base text-gray-500 leading-relaxed max-w-2xl`}>
-            Mix two GLSL shader decks like a DJ. Map audio to any parameter. Drop
-            visuals into music videos, club nights, gallery walls, livestreams,
-            festival stages — anything that wants to react. Below: a tiny taste —
-            one shader, four knobs.
+            Mix two GLSL shader decks like a DJ. Map audio to any parameter.
+            Made for music videos, club nights, gallery walls, livestreams,
+            festival stages — for anything you want to move with sound. Below: a
+            tiny taste — one shader, a few knobs, three colors.
           </p>
         </header>
 
@@ -85,9 +98,8 @@ export default function SF01Page() {
             <div className="lg:col-span-2">
               <div className="relative w-full aspect-[16/10] rounded-[20px] overflow-hidden border border-neutral-800 bg-neutral-950">
                 <ClientOnly>
-                  <VoronoiPreview controls={{ density, motion, hueDrift, edge }} />
+                  <VoronoiPreview controls={controls} />
                 </ClientOnly>
-                {/* Esquina con label del shader */}
                 <div className="absolute top-3 left-3 flex items-center gap-2 z-10 pointer-events-none">
                   <span className="block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                   <span className={`text-[10px] uppercase tracking-[0.18em] text-white/70 ${spaceMono.className}`}>
@@ -108,8 +120,20 @@ export default function SF01Page() {
                 </p>
                 <Slider label="Density" value={density} min={1.5} max={20} step={0.1} onChange={setDensity} />
                 <Slider label="Motion" value={motion} min={0} max={2.5} step={0.01} onChange={setMotion} />
-                <Slider label="Hue Drift" value={hueDrift} min={0} max={1} step={0.01} onChange={setHueDrift} />
+                <Slider label="Hue drift" value={hueDrift} min={0} max={1} step={0.01} onChange={setHueDrift} />
                 <Slider label="Edge" value={edge} min={0} max={2} step={0.01} onChange={setEdge} />
+
+                <div className="pt-2 border-t border-neutral-900 space-y-3">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
+                    Palette
+                  </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <ColorSwatch label="A" value={colorA} onChange={setColorA} />
+                    <ColorSwatch label="B" value={colorB} onChange={setColorB} />
+                    <ColorSwatch label="Edge" value={edgeColor} onChange={setEdgeColor} />
+                  </div>
+                </div>
+
                 <p className="pt-2 text-[10px] uppercase tracking-[0.18em] text-gray-500 leading-relaxed">
                   This is one shader of many — and one preset of infinite. The full
                   SF-01 ships with the dual-deck mixer, audio bands, blend modes
@@ -140,29 +164,29 @@ export default function SF01Page() {
           </div>
         </section>
 
-        {/* CTA / Status */}
+        {/* Status */}
         <section className="border-t border-neutral-900 pt-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="space-y-2">
               <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
                 Status
               </p>
-              <p className="text-base text-white">In active development</p>
-              <p className="text-sm text-gray-500">Internal builds running. Performance-tested on macOS, Windows, browser.</p>
+              <p className="text-base text-white">In active development · Q3 2026</p>
+              <p className="text-sm text-gray-500">
+                Internal builds are running on macOS, Windows and the browser.
+                Closed beta opens earlier — drop a line if you want a key.
+              </p>
             </div>
             <div className="space-y-2">
               <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
-                Public release
+                Who is it for
               </p>
-              <p className="text-base text-white">Q3 2026</p>
-              <p className="text-sm text-gray-500">Closed beta opens earlier — drop a line if you want a key.</p>
-            </div>
-            <div className="space-y-2">
-              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
-                For who
+              <p className="text-base text-white">Anyone whose visuals want to listen.</p>
+              <p className="text-sm text-gray-500">
+                VJs and motion designers; producers stitching together music
+                videos; coders patching shaders for fun; anyone who feels the
+                screen could be louder. The tool is the same — the use is yours.
               </p>
-              <p className="text-base text-white">VJs, motion designers, devs</p>
-              <p className="text-sm text-gray-500">Anyone whose visuals want to listen.</p>
             </div>
           </div>
         </section>
@@ -208,6 +232,7 @@ function Slider({ label, value, min, max, step, onChange }: SliderProps) {
           onChange={(e) => onChange(parseFloat(e.target.value))}
           aria-label={label}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          style={{ touchAction: 'pan-y' }}
         />
         <div
           className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-red-500 ring-2 ring-black pointer-events-none"
@@ -216,4 +241,39 @@ function Slider({ label, value, min, max, step, onChange }: SliderProps) {
       </div>
     </div>
   )
+}
+
+interface ColorSwatchProps {
+  label: string
+  value: string
+  onChange: (v: string) => void
+}
+
+function ColorSwatch({ label, value, onChange }: ColorSwatchProps) {
+  return (
+    <label className="relative block cursor-pointer group">
+      <span className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5">
+        {label}
+      </span>
+      <span
+        className="block w-full h-9 rounded-md border border-neutral-700 group-hover:border-neutral-500 transition-colors"
+        style={{ backgroundColor: value }}
+      />
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        aria-label={`Color ${label}`}
+        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+      />
+    </label>
+  )
+}
+
+/** Convierte un hex CSS '#rrggbb' a una tupla [r, g, b] normalizada 0..1. */
+function hexToRgb01(hex: string): [number, number, number] {
+  const m = hex.match(/^#([0-9a-f]{6})$/i)
+  if (!m) return [1, 1, 1]
+  const n = parseInt(m[1], 16)
+  return [((n >> 16) & 0xff) / 255, ((n >> 8) & 0xff) / 255, (n & 0xff) / 255]
 }
