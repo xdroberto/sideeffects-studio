@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ReflowingParagraph } from './reflowing-paragraph'
 import { DragObstacle } from './drag-obstacle'
 
@@ -11,9 +11,10 @@ interface ReflowCanvasProps {
   /** Altura de línea (px). */
   lineHeight?: number
   /**
-   * Aspect ratio del canvas (width/height). El componente ocupa 100%
-   * del ancho del padre y calcula la altura para el aspect dado.
-   * Recortable si el texto excede.
+   * Aspect ratio mínimo del canvas (width/height). Si el texto al
+   * reflujear genera más alto del que el aspect produce, el canvas
+   * crece para que NUNCA se recorte el contenido. Esto es vital en
+   * mobile, donde columnas estrechas implican muchas más líneas.
    * @default 16/9
    */
   aspect?: number
@@ -35,9 +36,9 @@ interface ReflowCanvasProps {
  * Demo central de pretext: un párrafo + un obstáculo que se arrastra,
  * y el texto re-rompe en tiempo real alrededor.
  *
- * Mide su propio ancho con ResizeObserver para ser responsive.
- * En mobile, el obstáculo se restringe al rect del canvas. Como su
- * `touch-action: none` es local, el resto de la página scrollea libre.
+ * El canvas se dimensiona como `max(aspectHeight, textHeight + padding)`
+ * para que el texto nunca se recorte aun cuando el ancho disponible
+ * (mobile) genere muchas líneas.
  */
 export function ReflowCanvas({
   text,
@@ -52,9 +53,19 @@ export function ReflowCanvas({
   obstacleRingColor = '#ffffff',
 }: ReflowCanvasProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
-  const [size, setSize] = useState({ width: 800, height: 600 })
+  const [width, setWidth] = useState(800)
+  const [textHeight, setTextHeight] = useState(0)
   const [obstacle, setObstacle] = useState({ cx: 200, cy: 200 })
   const initialized = useRef(false)
+
+  // Padding inferior para que la última línea no toque el borde.
+  const VERTICAL_PADDING = 16
+
+  // Altura final = max(aspectHeight, textHeight + padding, obstacleDiameter + padding).
+  const aspectHeight = Math.round(width / aspect)
+  const minByObstacle = obstacleRadius * 2 + 32
+  const minByText = textHeight + VERTICAL_PADDING * 2
+  const height = Math.max(aspectHeight, minByText, minByObstacle)
 
   // Medir wrapper y reaccionar a resize.
   useEffect(() => {
@@ -63,25 +74,28 @@ export function ReflowCanvas({
     const measure = () => {
       const w = el.clientWidth
       if (w <= 0) return
-      const h = Math.round(w / aspect)
-      setSize({ width: w, height: h })
-      if (!initialized.current) {
-        // Posición inicial: ligeramente arriba a la derecha del centro.
-        setObstacle({ cx: w * 0.62, cy: h * 0.4 })
-        initialized.current = true
-      } else {
-        // En resize: clampear el obstáculo dentro del nuevo bound.
-        setObstacle(o => ({
-          cx: Math.max(obstacleRadius, Math.min(w - obstacleRadius, o.cx)),
-          cy: Math.max(obstacleRadius, Math.min(h - obstacleRadius, o.cy)),
-        }))
-      }
+      setWidth(w)
     }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [aspect, obstacleRadius])
+  }, [])
+
+  // Inicializar / clampear posición del obstáculo al cambiar bounds.
+  useEffect(() => {
+    if (!initialized.current && width > 0 && height > 0) {
+      setObstacle({ cx: width * 0.62, cy: Math.min(height * 0.4, height - obstacleRadius - 16) })
+      initialized.current = true
+      return
+    }
+    setObstacle(o => ({
+      cx: Math.max(obstacleRadius, Math.min(width - obstacleRadius, o.cx)),
+      cy: Math.max(obstacleRadius, Math.min(height - obstacleRadius, o.cy)),
+    }))
+  }, [width, height, obstacleRadius])
+
+  const onLayoutHeight = useCallback((h: number) => setTextHeight(h), [])
 
   return (
     <div
@@ -90,7 +104,7 @@ export function ReflowCanvas({
       style={{
         position: 'relative',
         width: '100%',
-        height: `${size.height}px`,
+        height: `${height}px`,
         overflow: 'hidden',
       }}
     >
@@ -98,16 +112,17 @@ export function ReflowCanvas({
         text={text}
         fontSize={fontSize}
         lineHeight={lineHeight}
-        width={size.width}
+        width={width}
         color={color}
         obstacle={{ cx: obstacle.cx, cy: obstacle.cy, radius: obstacleRadius + 16 }}
+        onLayoutHeight={onLayoutHeight}
         className={className}
       />
       <DragObstacle
         cx={obstacle.cx}
         cy={obstacle.cy}
         radius={obstacleRadius}
-        bounds={size}
+        bounds={{ width, height }}
         onChange={setObstacle}
         color={obstacleColor}
         ringColor={obstacleRingColor}

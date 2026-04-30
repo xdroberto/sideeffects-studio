@@ -56,6 +56,12 @@ interface ReflowingParagraphProps {
    * @default 60
    */
   minSegmentWidth?: number
+  /**
+   * Callback con la altura total del texto layout-eado (px). El padre
+   * la usa para dimensionar su container y evitar que el texto se
+   * recorte en breakpoints estrechos donde el wrap produce más líneas.
+   */
+  onLayoutHeight?: (height: number) => void
 }
 
 interface RenderedSegment {
@@ -74,6 +80,7 @@ export function ReflowingParagraph({
   className,
   color = 'white',
   minSegmentWidth = 60,
+  onLayoutHeight,
 }: ReflowingParagraphProps) {
   const lh = lineHeight ?? fontSize * 1.6
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -163,6 +170,12 @@ export function ReflowingParagraph({
 
     return { segments, totalHeight: (lineIdx + 1) * lh }
   }, [prepared, obstacle, width, lh, minSegmentWidth])
+
+  // Reportar altura del layout al padre (útil para que el container
+  // crezca cuando el wrap genera más líneas en pantallas estrechas).
+  useEffect(() => {
+    if (totalHeight > 0) onLayoutHeight?.(totalHeight)
+  }, [totalHeight, onLayoutHeight])
 
   return (
     <div
