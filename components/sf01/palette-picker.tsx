@@ -5,12 +5,13 @@ import { useEffect, useRef, useState } from 'react'
 /**
  * Custom palette picker para el demo de SF-01.
  *
- * Preset-driven: una grid de paletas curadas (3 colores cada una:
- * Color A, Color B, Edge). Click una paleta → los 3 colores se aplican.
+ * Preset-driven: una grid de cards con 3 swatches visuales prominentes
+ * (Color A · Color B · Edge). Click una card → los 3 colores se aplican.
+ * Optimizado para que el cambio de paleta sea VISUALMENTE inmediato,
+ * tanto en el preview como en la UI del picker mismo.
  *
- * Pop-over de fine-tuning: si el usuario quiere ajustar un color
- * concreto, click en el swatch correspondiente abre una mini-grid
- * de 24 hues curados. Sin `<input type="color">` nativo, sin HSV.
+ * Pop-over de fine-tuning: cada channel (A/B/Edge) abre una grid de 24
+ * hues curados + input hex. Sin `<input type="color">` nativo, sin HSV.
  *
  * Optimizado para touch: targets ≥ 28px, sin hover-only states,
  * cierra popover al click fuera o tocar otro swatch.
@@ -35,8 +36,8 @@ export const PRESET_PALETTES: Palette[] = [
   { id: 'lab', name: 'Lab', colors: { a: '#0e0e10', b: '#7a4dff', edge: '#c4ff5a' } },
 ]
 
-// Paleta de hues para fine-tune individual — 6 columnas × 4 filas:
-// negro/gris/blanco + base hues a 3 niveles (oscuro / medio / claro).
+// Paleta de hues para fine-tune individual — 6 columnas × 8 filas:
+// negro/gris/blanco + base hues a 5 niveles (oscuro / medio / claro).
 const HEX_GRID: string[] = [
   '#000000', '#1a1a1a', '#3a3a3a', '#7a7a7a', '#cfcfcf', '#ffffff',
   '#3a0a14', '#7a1a28', '#dc2626', '#ff6b6b', '#ff9faa', '#ffd9dd',
@@ -66,12 +67,19 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
 
   return (
     <div className={`space-y-4 ${fontClassName}`}>
-      {/* Preset palettes */}
-      <div className="space-y-2">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
-          Presets
-        </p>
-        <div className="grid grid-cols-2 gap-2">
+      {/* Preset palettes — bold visual cards, 2 columns */}
+      <div className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">
+            Palette
+          </p>
+          {activeId && (
+            <p className="text-[10px] uppercase tracking-[0.18em] text-red-500/80">
+              {PRESET_PALETTES.find(p => p.id === activeId)?.name}
+            </p>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">
           {PRESET_PALETTES.map(p => {
             const isActive = activeId === p.id
             return (
@@ -81,24 +89,23 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
                 onClick={() => onChange(p.colors)}
                 aria-pressed={isActive}
                 aria-label={`Palette ${p.name}`}
-                className={`group flex items-center gap-2 px-2 py-1.5 rounded-md border transition-colors ${
+                className={`group relative overflow-hidden rounded-md border transition-all duration-200 ${
                   isActive
-                    ? 'border-red-500/70 bg-red-500/[0.08]'
-                    : 'border-neutral-800 hover:border-neutral-600'
+                    ? 'border-red-500/80 ring-1 ring-red-500/30'
+                    : 'border-neutral-800 hover:border-neutral-500'
                 }`}
               >
-                {/* Stripe of 3 colors */}
-                <span
-                  className="block h-5 w-12 rounded-sm overflow-hidden flex shrink-0 border border-black/40"
-                  style={{ display: 'flex' }}
-                >
-                  <span style={{ flex: 1, backgroundColor: p.colors.a }} />
-                  <span style={{ flex: 1, backgroundColor: p.colors.b }} />
-                  <span style={{ flex: 1, backgroundColor: p.colors.edge }} />
+                {/* Big stacked swatches — 3 vertical bars, full card width */}
+                <span className="flex h-9 w-full">
+                  <span className="flex-1" style={{ backgroundColor: p.colors.a }} />
+                  <span className="flex-1" style={{ backgroundColor: p.colors.b }} />
+                  <span className="flex-1" style={{ backgroundColor: p.colors.edge }} />
                 </span>
                 <span
-                  className={`text-[10px] uppercase tracking-[0.16em] truncate ${
-                    isActive ? 'text-red-400' : 'text-gray-300 group-hover:text-white'
+                  className={`block px-2 py-1.5 text-[10px] uppercase tracking-[0.16em] text-left transition-colors ${
+                    isActive
+                      ? 'bg-red-500/[0.08] text-red-300'
+                      : 'bg-black/40 text-gray-400 group-hover:text-white'
                   }`}
                 >
                   {p.name}
@@ -111,22 +118,25 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
 
       {/* Fine-tune per channel */}
       <div className="space-y-2 pt-2 border-t border-neutral-900">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-gray-500">
+        <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">
           Tweak
         </p>
         <div className="space-y-2">
           <ChannelRow
             label="A"
+            sublabel="bg"
             value={value.a}
             onChange={hex => onChange({ ...value, a: hex })}
           />
           <ChannelRow
             label="B"
+            sublabel="fg"
             value={value.b}
             onChange={hex => onChange({ ...value, b: hex })}
           />
           <ChannelRow
             label="Edge"
+            sublabel="rim"
             value={value.edge}
             onChange={hex => onChange({ ...value, edge: hex })}
           />
@@ -138,11 +148,12 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
 
 interface ChannelRowProps {
   label: string
+  sublabel: string
   value: string
   onChange: (hex: string) => void
 }
 
-function ChannelRow({ label, value, onChange }: ChannelRowProps) {
+function ChannelRow({ label, sublabel, value, onChange }: ChannelRowProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -164,8 +175,9 @@ function ChannelRow({ label, value, onChange }: ChannelRowProps) {
   return (
     <div ref={ref} className="relative">
       <div className="flex items-center gap-2">
-        <span className="w-10 text-[10px] uppercase tracking-[0.16em] text-gray-500 shrink-0">
-          {label}
+        <span className="w-12 text-[10px] uppercase tracking-[0.16em] text-gray-500 shrink-0 flex flex-col leading-tight">
+          <span className="text-gray-400">{label}</span>
+          <span className="text-[8px] tracking-[0.2em] text-gray-600">{sublabel}</span>
         </span>
         <button
           type="button"

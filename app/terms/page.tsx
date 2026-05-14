@@ -1,20 +1,21 @@
 'use client'
 
 import Link from 'next/link'
+import { Container } from '@/components/ui/container'
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-24 max-w-3xl mx-auto">
+    <Container id="main-content" width="prose" as="main" className="min-h-screen bg-black text-white py-24 md:py-32">
       <Link href="/" className="text-gray-500 hover:text-white transition-colors text-sm mb-12 block">
         ← Back
       </Link>
 
-      <h1 className="text-4xl font-light tracking-wider mb-2">Terms of Use</h1>
+      <h1 className="text-display-md mb-2">Terms of Use</h1>
       <p className="text-gray-500 text-sm mb-12">Last updated: March 2026</p>
 
       <div className="space-y-8 text-gray-300 leading-relaxed">
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">1. Acceptance</h2>
+          <h2 className="text-display-sm text-white mb-3">1. Acceptance</h2>
           <p>
             By accessing this website (sideeffects.robertobh.dev), you agree to these terms.
             side_effects.art is an independent creative project operated by Roberto Becerril Hurtado.
@@ -23,7 +24,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">2. Intellectual Property</h2>
+          <h2 className="text-display-sm text-white mb-3">2. Intellectual Property</h2>
           <p>
             All original content on this site — including but not limited to generative artworks,
             code, visual designs, animations, and audiovisual compositions — is the intellectual
@@ -32,7 +33,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">3. Use of Content</h2>
+          <h2 className="text-display-sm text-white mb-3">3. Use of Content</h2>
           <p>
             Original creative works published on this site are licensed under{' '}
             <a href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-400 transition-colors">
@@ -49,7 +50,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">4. Third-Party Content</h2>
+          <h2 className="text-display-sm text-white mb-3">4. Third-Party Content</h2>
           <p>
             This site may include third-party libraries, fonts, or assets used under their
             respective licenses. These remain the property of their original authors.
@@ -57,7 +58,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">5. Disclaimer</h2>
+          <h2 className="text-display-sm text-white mb-3">5. Disclaimer</h2>
           <p>
             This site is provided &ldquo;as is&rdquo; without warranties of any kind. The creator is not
             liable for any damages arising from your use of this site, including but not limited
@@ -66,7 +67,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">6. Changes</h2>
+          <h2 className="text-display-sm text-white mb-3">6. Changes</h2>
           <p>
             These terms may be updated at any time. Continued use of the site constitutes
             acceptance of the revised terms.
@@ -74,7 +75,7 @@ export default function TermsPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">7. Contact</h2>
+          <h2 className="text-display-sm text-white mb-3">7. Contact</h2>
           <p>
             For questions regarding these terms, contact{' '}
             <a href="mailto:robertobecerrilhurtado@gmail.com" className="text-red-500 hover:text-red-400 transition-colors">
@@ -83,6 +84,6 @@ export default function TermsPage() {
           </p>
         </section>
       </div>
-    </div>
+    </Container>
   )
 }

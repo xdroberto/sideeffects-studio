@@ -12,7 +12,23 @@ import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
 const DiamondScene = nextDynamic(
   () => import('@/components/diamond-scene').then(mod => mod.DiamondScene),
-  { ssr: false, loading: () => <div className="fixed inset-0 z-0 bg-black" /> }
+  {
+    ssr: false,
+    // Loading skeleton: black background + radial glow tenue donde irá el
+    // diamante, así el hero no parpadea negro→escena 3D. El gradient
+    // imita el `radial-gradient` overlay que la propia DiamondScene
+    // monta encima del canvas (rgba(255,0,0,0.05) center → transparent).
+    loading: () => (
+      <div
+        className="fixed inset-0 z-0 bg-black"
+        aria-hidden
+        style={{
+          background:
+            'radial-gradient(circle at center, rgba(255,0,0,0.04) 0%, transparent 70%)',
+        }}
+      />
+    ),
+  }
 )
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
@@ -24,7 +40,7 @@ const spaceMono = Space_Mono({
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen bg-black text-white overflow-hidden">
+    <main id="main-content" className="relative min-h-screen bg-black text-white overflow-hidden">
       <Suspense fallback={<div className="fixed inset-0 z-0 bg-black" />}>
         <DiamondScene />
       </Suspense>
@@ -33,16 +49,16 @@ export default function Home() {
         <ClientOnly>
           <Nav />
         </ClientOnly>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)]">
-          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider mt-auto text-center chromatic-title ${microgramma.className}`}>
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] px-4">
+          <h1 className={`text-[clamp(1.75rem,9vw,3.75rem)] sm:text-5xl md:text-6xl font-light tracking-normal sm:tracking-wider mt-auto text-center break-words max-w-full chromatic-title ${microgramma.className}`}>
             side_effects.art
           </h1>
           <p
-            className={`mt-4 text-lg sm:text-xl md:text-2xl text-white ${spaceMono.className} mix-blend-difference opacity-70 subtitle-glow-only`}
+            className={`mt-4 text-base sm:text-xl md:text-2xl text-white text-center ${spaceMono.className} mix-blend-difference opacity-70 subtitle-glow-only`}
           >
             <ScrambleText text="elevating visual experiences" />
           </p>
-          <div className="mt-auto p-8 text-gray-400 text-sm text-center">
+          <div className="mt-auto p-6 sm:p-8 text-gray-400 text-xs sm:text-sm text-center">
             Generative Art • Interactive Design • Visual Symphony
           </div>
         </div>

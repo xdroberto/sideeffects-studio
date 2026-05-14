@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { Effect, PatchValues } from '../lib/types'
+import type { Effect, PatchValues } from '@/lib/shaders/sf01/types'
 
 export function usePatchState(effect: Effect) {
   const initial = useMemo<PatchValues>(() => {

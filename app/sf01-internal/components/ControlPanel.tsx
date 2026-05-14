@@ -1,7 +1,7 @@
 'use client'
 
 import { Slider } from '@/components/ui/slider'
-import type { Effect, PatchValues, UniformSpec } from '../lib/types'
+import type { Effect, PatchValues, UniformSpec } from '@/lib/shaders/sf01/types'
 
 type Props = {
   effect: Effect

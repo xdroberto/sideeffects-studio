@@ -27,8 +27,15 @@ export function Nav({ className }: NavProps) {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  // Baseline hover/focus pattern — coherente con design tokens:
+  // - Color de reposo `text-gray-400` (≈ ink/muted), hover → `text-signal` (rojo del proyecto)
+  // - Active route → `text-signal` (red-500) sin hover (ya está en el destino)
+  // - transition unificada: colors, 200ms, ease-out
+  // - focus-visible: el outline global rojo en globals.css se encarga del keyboard ring
   const linkClass = (active: boolean) =>
-    `transition-colors ${active ? 'text-red-500' : 'text-gray-400 hover:text-white'}`
+    `transition-colors duration-200 ease-out ${
+      active ? 'text-signal' : 'text-gray-400 hover:text-signal focus-visible:text-signal'
+    }`
 
   // Gallery y About viven en la landing (`/`). Los anchors funcionan
   // tanto desde la landing (scroll directo) como desde otras páginas
@@ -60,7 +67,11 @@ export function Nav({ className }: NavProps) {
   return (
     <>
       <nav className={cn("flex items-center justify-between p-4 w-full", className)}>
-        <Link href="/" className="text-red-500 hover:text-red-600 transition-colors z-50">
+        <Link
+          href="/"
+          className="text-signal hover:text-signal-hover transition-colors duration-200 ease-out z-50"
+          aria-label="side_effects.art — home"
+        >
           <CustomLogo />
         </Link>
 
@@ -72,21 +83,23 @@ export function Nav({ className }: NavProps) {
         {/* Hamburger button */}
         <button
           onClick={toggleMenu}
-          className="md:hidden relative z-50 text-gray-400 hover:text-white transition-colors p-1"
+          className="md:hidden relative z-50 text-gray-400 hover:text-signal transition-colors duration-200 ease-out p-1"
           aria-label={isOpen ? 'Close menu' : 'Open menu'}
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
       </nav>
 
-      {/* Mobile overlay */}
+      {/* Mobile overlay — tap-anywhere-to-close, fade in/out coherente */}
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-8 text-2xl transition-all duration-300 md:hidden",
+          "fixed inset-0 z-40 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-8 text-2xl transition-opacity duration-300 ease-out md:hidden",
           isOpen
             ? "opacity-100 pointer-events-auto"
             : "opacity-0 pointer-events-none"
         )}
+        aria-hidden={!isOpen}
+        onClick={closeMenu}
       >
         {navItems}
       </div>

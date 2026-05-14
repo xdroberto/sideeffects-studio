@@ -4,8 +4,8 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo } from 'react'
 import type { RefObject } from 'react'
 import * as THREE from 'three'
-import type { Effect, PatchValues } from '../lib/types'
-import { fullscreenVertex } from '../lib/shaders/common/vertex'
+import type { Effect, PatchValues } from '@/lib/shaders/sf01/types'
+import { fullscreenVertex } from '@/lib/shaders/sf01/common/vertex'
 import { ZERO_BANDS, type AudioBands } from '../hooks/useAudioSource'
 
 type Props = {

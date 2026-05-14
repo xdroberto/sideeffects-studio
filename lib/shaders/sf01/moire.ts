@@ -1,4 +1,4 @@
-import type { Effect } from '../types'
+import type { Effect } from './types'
 
 const fragment = /* glsl */ `
   precision highp float;

@@ -18,15 +18,25 @@ interface ScrambleTextProps {
   finalLockProgress?: number
   /**
    * Frecuencia de re-roll de los caracteres random (Hz). Más alto = más
-   * caótico. ~30 Hz ≈ visible parpadeo, ~60 Hz ≈ casi suave.
-   * @default 28
+   * caótico. ~30 Hz ≈ visible parpadeo, ~60 Hz ≈ casi suave. 48 Hz cae
+   * cerca de un re-roll cada ~1.25 frames a 60fps — entrega textura sin
+   * sentirse strobeado.
+   * @default 48
    */
   scrambleHz?: number
   className?: string
 }
 
-const DEFAULT_CHARSET =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?#$%@*+-=<>/'
+/**
+ * Charset por defecto del hero: alfanumérico mayúsculas + minúsculas +
+ * dígitos + un pequeño set de glyphs "instrumentales" (`. · / -`). Se
+ * descartaron los símbolos ruidosos (`$ % @ # < > ?`) — daban vibe de
+ * terminal genérica en vez de instrumentación de precisión.
+ */
+export const HERO_CHARSET =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789·./-'
+
+const DEFAULT_CHARSET = HERO_CHARSET
 
 /**
  * Reveal "scramble decoder" estilo terminal/Mr.Robot.
@@ -44,9 +54,9 @@ const DEFAULT_CHARSET =
 export function ScrambleText({
   text,
   charset = DEFAULT_CHARSET,
-  duration = 1800,
+  duration = 2200,
   finalLockProgress = 0.85,
-  scrambleHz = 28,
+  scrambleHz = 48,
   className,
 }: ScrambleTextProps) {
   const spanRef = useRef<HTMLSpanElement>(null)

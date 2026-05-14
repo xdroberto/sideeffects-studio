@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
-import { voronoi } from '@/app/sf01-internal/lib/shaders/voronoi'
-import { fullscreenVertex } from '@/app/sf01-internal/lib/shaders/common/vertex'
+import { voronoi } from '@/lib/shaders/sf01/voronoi'
+import { fullscreenVertex } from '@/lib/shaders/sf01/common/vertex'
 
 /**
  * Preview público del shader Voronoi de SF-01.

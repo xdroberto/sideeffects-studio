@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface DragObstacleProps {
   /** Posición controlada (centro X,Y dentro del container padre). */
@@ -52,6 +52,13 @@ export function DragObstacle({
     pointerStartY: 0,
     active: false,
   })
+  // Pulse de "released": cuando el user suelta, escalamos brevemente
+  // (1.0 → 1.08 → 1.0) como guiño físico. El pulso del pulse infinito
+  // ambient se pausa durante el drag (state `dragging`) para que el
+  // release sea legible.
+  const [released, setReleased] = useState(0)
+  const [dragging, setDragging] = useState(false)
+  const releaseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Pointer events globales mientras se arrastra: capturan movimientos
   // fuera del propio círculo (importante: si el dedo sale del círculo
@@ -67,8 +74,16 @@ export function DragObstacle({
       onChange({ cx: nextCX, cy: nextCY })
     }
     const onUp = () => {
+      if (!dragRef.current.active) return
       dragRef.current.active = false
       document.body.style.cursor = ''
+      setDragging(false)
+      // Trigger pulse on release. Incrementamos el contador para que el
+      // mismo release-after-release dispare otra animación aunque el
+      // valor sea numéricamente "el mismo" estado.
+      setReleased(r => r + 1)
+      if (releaseTimer.current) clearTimeout(releaseTimer.current)
+      releaseTimer.current = setTimeout(() => setReleased(0), 180)
     }
     window.addEventListener('pointermove', onMove, { passive: false })
     window.addEventListener('pointerup', onUp)
@@ -77,6 +92,7 @@ export function DragObstacle({
       window.removeEventListener('pointermove', onMove)
       window.removeEventListener('pointerup', onUp)
       window.removeEventListener('pointercancel', onUp)
+      if (releaseTimer.current) clearTimeout(releaseTimer.current)
     }
   }, [radius, bounds.width, bounds.height, onChange])
 
@@ -90,18 +106,39 @@ export function DragObstacle({
       active: true,
     }
     document.body.style.cursor = 'grabbing'
+    setDragging(true)
   }
 
-  // Visual: busto de filósofo (game-icons.net "philosopher-bust" by
-  // Delapouite, CC BY 3.0). El círculo rojo de fondo conserva la
-  // matemática del obstáculo (computeFreeRanges) intacta — solo el
-  // glifo del centro cambia.
+  // Visual: variable proposicional (default `P`) renderizada como glifo
+  // monospace centrado, como guiño a lógica formal — el orb ES una
+  // proposición que, al desplazarse, reorganiza el razonamiento (texto)
+  // a su alrededor. El círculo rojo de fondo conserva la matemática
+  // del obstáculo (computeFreeRanges) intacta — solo cambia el glifo
+  // del centro. El label se pasa como prop para que el padre pueda
+  // elegir el operador (`P`, `→`, `∧`, `¬`, etc.).
+  //
+  // Animation logic:
+  // - Idle: `orb-pulse` infinito (3s ease-in-out)
+  // - Dragging: ambient pulse pausada, scale 1.04 (lift visual)
+  // - Released: trigger one-shot `orb-release-<n>` (180ms) que escala
+  //   brevemente 1.0 → 1.08 → 1.0 como guiño físico de "let go". El
+  //   contador `released` cambia el nombre de la keyframe en cada
+  //   release, lo que fuerza al navegador a re-arrancar la animación
+  //   sin necesidad de re-montar el elemento (que rompería el pointer
+  //   capture).
+  const animation = dragging
+    ? 'none'
+    : released > 0
+      ? `orb-release-${released} 180ms ease-out`
+      : 'orb-pulse 3s ease-in-out infinite'
+  const dragScale = dragging ? 1.04 : 1
+  const glyph = label && label.length > 0 ? label : 'P'
   return (
     <button
       ref={ref}
       type="button"
       onPointerDown={onPointerDown}
-      aria-label="Drag the philosopher. The text reflows around it."
+      aria-label={`Drag the proposition ${glyph}. The text reflows around it.`}
       style={{
         position: 'absolute',
         left: `${cx - radius}px`,
@@ -112,43 +149,50 @@ export function DragObstacle({
         background: `radial-gradient(circle at 30% 28%, ${shade(color, 18)}, ${color} 55%, ${shade(color, -45)})`,
         border: `1px solid ${ringColor}26`,
         boxShadow: `0 0 0 1px ${ringColor}14, 0 14px 44px ${color}4d, inset 0 0 38px ${shade(color, -55)}`,
-        cursor: 'grab',
+        cursor: dragging ? 'grabbing' : 'grab',
         touchAction: 'none',
         userSelect: 'none',
         WebkitUserSelect: 'none',
         padding: 0,
         overflow: 'hidden',
-        animation: 'orb-pulse 3s ease-in-out infinite',
+        animation,
+        transform: `scale(${dragScale})`,
+        transition: 'transform 180ms ease-out',
       }}
     >
-      {/* Busto del filósofo — game-icons.net `philosopher-bust` por
-          Delapouite, licencia CC BY 3.0. */}
-      <svg
-        viewBox="0 0 512 512"
-        width="68%"
-        height="68%"
+      {/* Glifo proposicional centrado. Tipografía heredada (Space Mono).
+          Italic + tracking ligero — convención de variables en lógica. */}
+      <span
+        aria-hidden
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
-          display: 'block',
-          pointerEvents: 'none',
+          transform: 'translate(-50%, -54%)',
+          fontFamily: 'inherit',
+          fontStyle: 'italic',
+          fontWeight: 400,
+          fontSize: `${Math.round(radius * 0.95)}px`,
+          lineHeight: 1,
+          letterSpacing: '-0.02em',
           color: ringColor,
-          filter: `drop-shadow(0 2px 6px ${shade(color, -65)})`,
+          textShadow: `0 2px 8px ${shade(color, -65)}, 0 0 1px ${ringColor}55`,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          whiteSpace: 'nowrap',
         }}
-        aria-hidden
       >
-        <path
-          fill="currentColor"
-          fillOpacity="0.94"
-          d="M256 37.4c-28.1 0-50.9 21.3-50.9 59.9c0 29.8 12.9 58.3 12.9 58.3l15-18.5h12.6v-22.7H218V93.5h76v20.9h-27.6v22.7H279l15 18.5s12.9-28.5 12.9-58.3c0-38.6-22.8-59.9-50.9-59.9m-66.9 72.5c-1.3 8.7-1.9 17.8-1.9 27.2c0 64.2 30.8 106.4 68.8 106.4s68.8-42.2 68.8-106.4c0-9.4-.6-18.5-1.9-27.2c-2.8 28.3-13.7 52.6-13.7 52.6L298.1 187l-27-33.2h-30.2l-27 33.2l-11.1-24.5s-10.9-24.3-13.7-52.6m58.6 53.7h16.6v12.7h-16.6zm71 19.7v.2zm-145.5 5l-36.9 9.3L168 339.4h61.8l24-75.1c-34.7-1.2-66.9-28.9-80.6-76m165.6 0c-10.5 36.2-32 61-57.2 71L256 339.4h21.7l20.7-70.4l12 3.5l-19.6 66.9h16.9l36.4-125.8l12 3.5l-35.4 122.3H344l31.7-141.8zM197 360.6v94h18v-64h82v64h18v-94zm36 48v46h46v-46zm-69.3 64l-14 18h212.6l-14-18z"
-        />
-      </svg>
+        {glyph}
+      </span>
       <style>{`
         @keyframes orb-pulse {
           0%, 100% { box-shadow: 0 0 0 1px ${ringColor}14, 0 14px 44px ${color}4d, inset 0 0 38px ${shade(color, -55)}; }
           50% { box-shadow: 0 0 0 1px ${ringColor}33, 0 18px 52px ${color}66, inset 0 0 44px ${shade(color, -55)}; }
+        }
+        @keyframes orb-release-${released} {
+          0% { transform: scale(1.04); box-shadow: 0 0 0 1px ${ringColor}33, 0 18px 52px ${color}66, inset 0 0 44px ${shade(color, -55)}; }
+          45% { transform: scale(1.085); box-shadow: 0 0 0 2px ${ringColor}55, 0 22px 68px ${color}88, inset 0 0 50px ${shade(color, -55)}; }
+          100% { transform: scale(1); box-shadow: 0 0 0 1px ${ringColor}14, 0 14px 44px ${color}4d, inset 0 0 38px ${shade(color, -55)}; }
         }
       `}</style>
     </button>

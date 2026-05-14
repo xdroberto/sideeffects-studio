@@ -60,12 +60,17 @@ interface AsciiBackdropProps {
 export function AsciiBackdrop({
   cols = 80,
   rows,
-  ramp = ' .`-_:,;^=+*#%@',
+  // Ramp ascendente y discriminable. El original (` .\`-_:,;^=+*#%@`)
+  // mezclaba glyphs de densidad casi idéntica (comma vs underscore vs
+  // backtick) que en escala chiquita no se diferenciaban. Esta versión
+  // usa pasos visuales claros: espacio → punto → dos puntos → guión bajo
+  // → cruz → asterisco → hash → arroba.
+  ramp = ' .:·-=*#@',
   color = '255, 255, 255',
-  baseAlpha = 0.06,
-  peakAlpha = 0.85,
+  baseAlpha = 0.12,
+  peakAlpha = 0.95,
   noiseSpeed = 0.0007,
-  attractRadius = 240,
+  attractRadius = 320,
   followPointer = true,
   colorMode = 'solid',
   iridescenceSaturation = 85,
@@ -81,6 +86,14 @@ export function AsciiBackdrop({
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+
+    // Reduced-motion guard: si el OS pide reduce-motion, pintamos un único
+    // frame estático y salimos del loop. El campo ASCII sigue visible
+    // (no desaparece) pero no anima — respeta a usuarios con vestibular
+    // sensitivity. `matchMedia` se chequea una sola vez al mount.
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     let raf = 0
     let dpr = window.devicePixelRatio || 1
@@ -203,10 +216,17 @@ export function AsciiBackdrop({
         }
       }
 
+      // En reduced-motion solo pintamos un único frame: cortamos el loop.
+      if (reduceMotion) return
       raf = requestAnimationFrame(tick)
     }
 
-    raf = requestAnimationFrame(tick)
+    if (reduceMotion) {
+      // Single static frame — t=0 estable, sin atractor activo.
+      tick(0)
+    } else {
+      raf = requestAnimationFrame(tick)
+    }
 
     return () => {
       cancelAnimationFrame(raf)

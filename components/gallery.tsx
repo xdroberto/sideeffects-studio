@@ -1,31 +1,33 @@
 'use client'
 
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import galleryData from '@/data/gallery.json'
 
 // ─── Types ──────────────────────────────────────────────────────────
-interface Artwork {
+// Mirror of the discriminated union in lib/gallery-data.ts. Kept inline
+// because this is a client component and the lib module is server-only.
+
+type MediaType = 'image' | 'video-mp4' | 'video-youtube'
+
+interface ArtworkBase {
   id: string
   title: string
   description?: string
-  imagePath: string
   featured?: boolean
   aspectRatio?: string
-  mediaType?: 'image' | 'video'
-  videoUrl?: string
-  previewVideoPath?: string
 }
+type ArtworkImage = ArtworkBase & { mediaType: 'image'; imagePath: string }
+type ArtworkVideoMp4 = ArtworkBase & { mediaType: 'video-mp4'; videoPath: string; posterPath?: string }
+type ArtworkYouTube = ArtworkBase & { mediaType: 'video-youtube'; youtubeId: string; posterPath?: string }
+type Artwork = ArtworkImage | ArtworkVideoMp4 | ArtworkYouTube
 
-// ─── Fallback data ──────────────────────────────────────────────────
-const FALLBACK_ARTWORKS: Artwork[] = [
-  { id: '1', imagePath: 'https://picsum.photos/seed/1/800/600', title: 'Digital Waves', description: 'Generative ocean patterns driven by noise algorithms.', featured: true },
-  { id: '2', imagePath: 'https://picsum.photos/seed/2/800/600', title: 'Fractal Dimensions', description: 'Recursive structures revealing infinite complexity.' },
-  { id: '3', imagePath: 'https://picsum.photos/seed/3/800/600', title: 'Neural Patterns', description: 'Visualizing the hidden layers of machine learning.' },
-  { id: '4', imagePath: 'https://picsum.photos/seed/4/800/600', title: 'Quantum Flow', description: 'Particle simulations inspired by quantum mechanics.' },
-  { id: '5', imagePath: 'https://picsum.photos/seed/5/800/600', title: 'Digital Nebula', description: 'Cosmic dust rendered through procedural generation.' },
-  { id: '6', imagePath: 'https://picsum.photos/seed/6/800/600', title: 'Algorithm Dreams', description: 'Abstract compositions from evolutionary algorithms.' },
-]
+// ─── Initial data: commited gallery.json (source of truth in static export).
+// In dev mode, the useEffect below tries the admin API to pick up edits made
+// from /admin/gallery without restarting; if it fails (e.g. static export
+// where the API doesn't exist), we keep the json items silently.
 
 // ─── Image error fallback ───────────────────────────────────────────
 const PLACEHOLDER_IMG = '/uploads/placeholder.svg'
@@ -36,61 +38,86 @@ function sanitize(input: unknown, max = 200): string {
   return input.slice(0, max).trim()
 }
 
-// ─── Video embed URL parser ─────────────────────────────────────────
-function getEmbedUrl(url?: string): string | null {
-  if (!url) return null
-  try {
-    // YouTube: youtube.com/watch?v=ID or youtu.be/ID
-    const ytMatch = url.match(
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
-    )
-    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&rel=0`
+// ─── Normalize API payload into discriminated Artwork ───────────────
+function normalizeItem(raw: any): Artwork | null {
+  if (!raw || typeof raw !== 'object') return null
+  const base = {
+    id: String(raw.id),
+    title: sanitize(raw.title, 100),
+    description: sanitize(raw.description) || undefined,
+    featured: Boolean(raw.featured),
+    aspectRatio: raw.aspectRatio,
+  }
+  const mediaType: MediaType = raw.mediaType === 'video-mp4' || raw.mediaType === 'video-youtube'
+    ? raw.mediaType
+    : 'image'
 
-    // Vimeo: vimeo.com/ID
-    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/)
-    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`
-
-    return null
-  } catch {
-    return null
+  if (mediaType === 'image') {
+    return { ...base, mediaType: 'image', imagePath: raw.imagePath || PLACEHOLDER_IMG }
+  }
+  if (mediaType === 'video-mp4') {
+    if (!raw.videoPath) return null
+    return {
+      ...base,
+      mediaType: 'video-mp4',
+      videoPath: String(raw.videoPath),
+      posterPath: raw.posterPath ? String(raw.posterPath) : undefined,
+    }
+  }
+  // video-youtube
+  if (!raw.youtubeId) return null
+  return {
+    ...base,
+    mediaType: 'video-youtube',
+    youtubeId: String(raw.youtubeId),
+    posterPath: raw.posterPath ? String(raw.posterPath) : undefined,
   }
 }
 
+// ─── Resolve the tile thumbnail for any variant ─────────────────────
+function getTileThumb(item: Artwork): string {
+  if (item.mediaType === 'image') return item.imagePath
+  if (item.mediaType === 'video-mp4') return item.posterPath || PLACEHOLDER_IMG
+  // YouTube: prefer override poster, else maxres thumbnail
+  return item.posterPath || `https://img.youtube.com/vi/${item.youtubeId}/maxresdefault.jpg`
+}
+
 // ─── Component ──────────────────────────────────────────────────────
+// Map the committed JSON at module-eval time so the initial render is correct
+// (no flash of fallback content in static export).
+const INITIAL_ARTWORKS: Artwork[] = ((galleryData as { items?: unknown[] }).items ?? [])
+  .map(normalizeItem)
+  .filter((it): it is Artwork => it !== null)
+
 export function Gallery() {
   const [selectedArtwork, setSelectedArtwork] = useState<Artwork | null>(null)
-  const [galleryItems, setGalleryItems] = useState<Artwork[]>(FALLBACK_ARTWORKS)
+  const [galleryItems, setGalleryItems] = useState<Artwork[]>(INITIAL_ARTWORKS)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
   const containerRef = useRef<HTMLDivElement>(null)
 
   const MotionDiv = motion.div as any
 
-  // Fetch gallery items from local API
+  // Try to pick up live edits from /admin/gallery (only meaningful in dev mode
+  // — in static export the API is excluded and the fetch fails silently).
   useEffect(() => {
+    let cancelled = false
     const fetchItems = async () => {
       try {
         const res = await fetch('/api/admin/gallery')
-        if (!res.ok) return
+        if (!res.ok || cancelled) return
         const data = await res.json()
         if (Array.isArray(data.items) && data.items.length > 0) {
-          const mapped: Artwork[] = data.items.map((item: any) => ({
-            id: String(item.id),
-            title: sanitize(item.title, 100),
-            description: sanitize(item.description) || undefined,
-            imagePath: item.imagePath || PLACEHOLDER_IMG,
-            featured: Boolean(item.featured),
-            aspectRatio: item.aspectRatio,
-            mediaType: item.mediaType || 'image',
-            videoUrl: item.videoUrl || undefined,
-            previewVideoPath: item.previewVideoPath || undefined,
-          }))
-          setGalleryItems(mapped)
+          const mapped = data.items
+            .map(normalizeItem)
+            .filter((it: Artwork | null): it is Artwork => it !== null)
+          if (mapped.length > 0 && !cancelled) setGalleryItems(mapped)
         }
-      } catch (error) {
-        console.error('Gallery: failed to fetch items:', error)
+      } catch {
+        // Silent: expected in static export (no admin API in production build).
       }
     }
     fetchItems()
+    return () => { cancelled = true }
   }, [])
 
   const handleImageError = useCallback((id: string) => {
@@ -116,33 +143,49 @@ export function Gallery() {
 
   return (
     <div className="w-full bg-black" ref={containerRef}>
-      <div className="max-w-[1400px] mx-auto p-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-1 auto-rows-[180px]">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-[140px] sm:auto-rows-[180px]">
           {galleryItems.map((artwork) => {
-            const isVideo = artwork.mediaType === 'video'
-            const imgSrc = imageErrors.has(artwork.id) ? PLACEHOLDER_IMG : artwork.imagePath
+            const isVideo = artwork.mediaType !== 'image'
+            const errored = imageErrors.has(artwork.id)
+            const rawThumb = getTileThumb(artwork)
+            const tileSrc = errored ? PLACEHOLDER_IMG : rawThumb
+            const isRemoteThumb = tileSrc.startsWith('http')
+            const variantBadge =
+              artwork.mediaType === 'video-mp4' ? 'VIDEO'
+                : artwork.mediaType === 'video-youtube' ? 'YOUTUBE'
+                  : null
+
             return (
               <MotionDiv
                 key={artwork.id}
-                className={`relative cursor-pointer bg-neutral-900 overflow-hidden rounded-[20px] group ${artwork.featured ? 'col-span-2 row-span-2' : ''}`}
+                className={`relative cursor-pointer bg-neutral-900 overflow-hidden rounded-[20px] group transition-shadow duration-300 ease-out hover:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] focus-visible:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] ${artwork.featured ? 'col-span-2 row-span-2' : ''}`}
                 onClick={() => setSelectedArtwork(artwork)}
+                onKeyDown={(e: ReactKeyboardEvent) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    setSelectedArtwork(artwork)
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Open ${artwork.title}${isVideo ? ' (video)' : ''}`}
                 whileHover={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Grid tile: video preview or image */}
-                {isVideo && artwork.previewVideoPath ? (
-                  <video
-                    src={artwork.previewVideoPath}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
-                    poster={imgSrc}
+                {/* Tile media: always a still poster/thumb — no autoplay */}
+                {isRemoteThumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={tileSrc}
+                    alt={artwork.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    onError={() => handleImageError(artwork.id)}
                   />
                 ) : (
                   <Image
-                    src={imgSrc}
+                    src={tileSrc}
                     alt={artwork.title}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -150,12 +193,13 @@ export function Gallery() {
                   />
                 )}
 
-                {/* Play badge for video items */}
-                {isVideo && (
-                  <div className="absolute top-2 left-2 z-10 bg-black/70 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center pointer-events-none">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="white">
+                {/* Play badge for video items — bottom-left, subtle */}
+                {variantBadge && (
+                  <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 pointer-events-none">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="text-white">
                       <polygon points="5,3 19,12 5,21" />
                     </svg>
+                    <span className="text-white text-[10px] tracking-[0.12em] font-mono">{variantBadge}</span>
                   </div>
                 )}
 
@@ -177,8 +221,8 @@ export function Gallery() {
       {/* Lightbox */}
       <AnimatePresence>
         {selectedArtwork && (() => {
-          const isVideo = selectedArtwork.mediaType === 'video'
-          const embedUrl = isVideo ? getEmbedUrl(selectedArtwork.videoUrl) : null
+          const item = selectedArtwork
+          const errored = imageErrors.has(item.id)
 
           return (
             <MotionDiv
@@ -197,52 +241,63 @@ export function Gallery() {
               >
                 {/* Media content */}
                 <div className="relative w-full flex-1 min-h-0 flex items-center justify-center">
-                  {isVideo && embedUrl ? (
-                    /* YouTube / Vimeo embed */
+                  {item.mediaType === 'video-youtube' ? (
+                    // YouTube embed — mounted only when lightbox opens
                     <div className="w-full" style={{ maxWidth: '960px', aspectRatio: '16/9' }}>
                       <iframe
-                        src={embedUrl}
+                        src={`https://www.youtube.com/embed/${item.youtubeId}?autoplay=0&rel=0`}
                         className="w-full h-full rounded-lg"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                        title={selectedArtwork.title}
+                        title={item.title}
                       />
                     </div>
-                  ) : isVideo && selectedArtwork.previewVideoPath ? (
-                    /* Direct video playback */
+                  ) : item.mediaType === 'video-mp4' ? (
+                    // Self-hosted video — no autoplay (better mobile + a11y UX)
                     <video
-                      src={selectedArtwork.previewVideoPath}
+                      src={item.videoPath}
                       controls
-                      autoPlay
-                      className="max-w-full max-h-[80vh] rounded-lg"
-                      poster={imageErrors.has(selectedArtwork.id) ? PLACEHOLDER_IMG : selectedArtwork.imagePath}
+                      playsInline
+                      poster={item.posterPath}
+                      className="max-w-full max-h-[80vh] rounded-lg w-full"
+                      style={{ objectFit: 'contain' }}
                     />
                   ) : (
-                    /* Image */
+                    // Image
                     <div className="relative w-full" style={{ height: '80vh' }}>
-                      <Image
-                        src={imageErrors.has(selectedArtwork.id) ? PLACEHOLDER_IMG : selectedArtwork.imagePath}
-                        alt={selectedArtwork.title}
-                        fill
-                        className="object-contain"
-                        onError={() => handleImageError(selectedArtwork.id)}
-                      />
+                      {item.imagePath.startsWith('http') ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={errored ? PLACEHOLDER_IMG : item.imagePath}
+                          alt={item.title}
+                          className="absolute inset-0 w-full h-full object-contain"
+                          onError={() => handleImageError(item.id)}
+                        />
+                      ) : (
+                        <Image
+                          src={errored ? PLACEHOLDER_IMG : item.imagePath}
+                          alt={item.title}
+                          fill
+                          className="object-contain"
+                          onError={() => handleImageError(item.id)}
+                        />
+                      )}
                     </div>
                   )}
                 </div>
 
                 {/* Text info with solid gradient backdrop */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/80 to-transparent pt-16 pb-8 px-4 text-center">
-                  <h3 className="text-white text-xl md:text-2xl font-light">{selectedArtwork.title}</h3>
-                  {selectedArtwork.description && (
-                    <p className="text-gray-300 text-sm md:text-base mt-2 max-w-lg mx-auto">{selectedArtwork.description}</p>
+                  <h3 className="text-white text-xl md:text-2xl font-light">{item.title}</h3>
+                  {item.description && (
+                    <p className="text-gray-300 text-sm md:text-base mt-2 max-w-lg mx-auto">{item.description}</p>
                   )}
                 </div>
 
                 {/* Close button */}
                 <button
                   onClick={closeModal}
-                  className="absolute top-4 right-4 text-white hover:text-red-500 transition-colors z-10"
+                  className="absolute top-4 right-4 text-white hover:text-signal transition-colors duration-200 ease-out z-10"
                   aria-label="Close"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

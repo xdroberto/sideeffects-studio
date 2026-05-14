@@ -43,16 +43,28 @@ export function Footer() {
             <p>México</p>
             <a
               href="mailto:robertobecerrilhurtado@gmail.com"
-              className="block hover:text-red-500 transition-colors"
+              className="block hover:text-signal transition-colors duration-200 ease-out"
             >
               robertobecerrilhurtado@gmail.com
             </a>
           </div>
           <div className="flex gap-4 text-gray-400">
-            <a href="https://www.instagram.com/side_effects.art/" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors">
+            <a
+              href="https://www.instagram.com/side_effects.art/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-signal transition-colors duration-200 ease-out"
+              aria-label="Instagram — side_effects.art"
+            >
               <Instagram size={20} />
             </a>
-            <a href="https://github.com/xdroberto" target="_blank" rel="noopener noreferrer" className="hover:text-red-500 transition-colors">
+            <a
+              href="https://github.com/xdroberto"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-signal transition-colors duration-200 ease-out"
+              aria-label="GitHub — xdroberto"
+            >
               <Github size={20} />
             </a>
           </div>
@@ -97,7 +109,7 @@ export function Footer() {
             href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-gray-300 transition-colors group"
+            className="flex items-center gap-2 hover:text-signal transition-colors duration-200 ease-out group"
             title="Licensed under CC BY-NC-ND 4.0"
           >
             <CCIcon className="w-5 h-5" />
@@ -111,7 +123,7 @@ export function Footer() {
             href="https://github.com/xdroberto/sideeffects-studio"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 hover:text-gray-300 transition-colors"
+            className="flex items-center gap-2 hover:text-signal transition-colors duration-200 ease-out"
             title="Open Source"
           >
             <Code size={16} />
@@ -123,11 +135,11 @@ export function Footer() {
       <div className="relative z-10 max-w-6xl mx-auto mt-8 pt-8 border-t border-gray-800">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
           <div className="flex gap-6">
-            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-            <Link href="/licensing" className="hover:text-white transition-colors">Licensing</Link>
+            <Link href="/terms" className="hover:text-signal transition-colors duration-200 ease-out">Terms</Link>
+            <Link href="/privacy" className="hover:text-signal transition-colors duration-200 ease-out">Privacy</Link>
+            <Link href="/licensing" className="hover:text-signal transition-colors duration-200 ease-out">Licensing</Link>
           </div>
-          <p>© 2026 side_effects.art<Link href="/admin" className="text-gray-800 hover:text-gray-600 transition-colors" aria-label="Admin">.</Link></p>
+          <p>© 2026 side_effects.art<Link href="/admin" className="text-gray-800 hover:text-gray-600 transition-colors duration-200 ease-out" aria-label="Admin">.</Link></p>
         </div>
       </div>
     </footer>

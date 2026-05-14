@@ -79,13 +79,18 @@ export function ReflowingParagraph({
   width,
   className,
   color = 'white',
-  minSegmentWidth = 60,
+  minSegmentWidth,
   onLayoutHeight,
 }: ReflowingParagraphProps) {
   const lh = lineHeight ?? fontSize * 1.6
   const wrapperRef = useRef<HTMLDivElement>(null)
   const measureRef = useRef<HTMLDivElement>(null)
   const [prepared, setPrepared] = useState<PreparedTextWithSegments | null>(null)
+  // minSegmentWidth responsive: en columnas estrechas (mobile 375px) un
+  // valor fijo de 60px puede dejar la mitad del flujo sin renderear cuando
+  // el orb se acerca al borde. Escala con el width pero con un piso de 40px
+  // que sigue garantizando palabras razonables.
+  const effectiveMinSegment = minSegmentWidth ?? Math.max(40, Math.min(60, width * 0.16))
 
   // Preparar pretext una vez la fuente esté lista.
   useEffect(() => {
@@ -133,7 +138,7 @@ export function ReflowingParagraph({
       }
 
       const yCenter = lineIdx * lh + lh / 2
-      const ranges = computeFreeRanges(yCenter, obstacle, width, minSegmentWidth)
+      const ranges = computeFreeRanges(yCenter, obstacle, width, effectiveMinSegment)
 
       let advancedThisLine = false
       for (const seg of ranges) {
@@ -169,7 +174,7 @@ export function ReflowingParagraph({
     }
 
     return { segments, totalHeight: (lineIdx + 1) * lh }
-  }, [prepared, obstacle, width, lh, minSegmentWidth])
+  }, [prepared, obstacle, width, lh, effectiveMinSegment])
 
   // Reportar altura del layout al padre (útil para que el container
   // crezca cuando el wrap genera más líneas en pantallas estrechas).
@@ -199,8 +204,38 @@ export function ReflowingParagraph({
         M
       </div>
 
-      {prepared ? (
-        segments.map((seg, i) => (
+      {/*
+        Layout en dos capas para evitar el flicker que se notaba al cargar:
+        antes el fallback `<p>` aparecía y luego se reemplazaba bruscamente
+        por los segments cuando `prepareWithSegments` terminaba. Ahora
+        ambas capas coexisten en el mismo árbol y cruzamos opacidad
+        (300ms) cuando los segments están listos. El fallback ocupa el
+        mismo `lineHeight` y `color`, así que la transición es suave y
+        no hay salto visible de altura.
+      */}
+      <p
+        aria-hidden={prepared != null}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          margin: 0,
+          opacity: prepared ? 0 : 1,
+          transition: 'opacity 220ms ease-out',
+          pointerEvents: 'none',
+        }}
+      >
+        {text}
+      </p>
+      <div
+        aria-hidden={prepared == null}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          opacity: prepared ? 1 : 0,
+          transition: 'opacity 320ms ease-out',
+        }}
+      >
+        {segments.map((seg, i) => (
           <span
             key={i}
             style={{
@@ -214,11 +249,8 @@ export function ReflowingParagraph({
           >
             {seg.text}
           </span>
-        ))
-      ) : (
-        // Fallback: párrafo plano hasta que pretext mida.
-        <p style={{ margin: 0 }}>{text}</p>
-      )}
+        ))}
+      </div>
     </div>
   )
 }

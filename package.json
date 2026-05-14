@@ -3,13 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/build-static.mjs",
+    "build:raw": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "format:check": "node -e \"console.log('no formatter configured')\"",
+    "validate": "npm run typecheck && npm run lint && npm run build",
+    "test": "playwright test",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@emotion/is-prop-valid": "latest",
+    "@chenglou/pretext": "^0.0.6",
+    "@emotion/is-prop-valid": "^1.4.0",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -32,12 +40,11 @@
     "@radix-ui/react-separator": "1.1.1",
     "@radix-ui/react-slider": "1.2.2",
     "@radix-ui/react-slot": "1.1.1",
-    "@radix-ui/react-switch": "latest",
+    "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "1.1.2",
     "@radix-ui/react-toast": "1.2.4",
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
-    "@chenglou/pretext": "^0.0.6",
     "@radix-ui/react-tooltip": "1.1.6",
     "@react-three/drei": "^9.122.0",
     "@react-three/fiber": "^8.18.0",
@@ -76,6 +83,7 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22",

@@ -12,36 +12,66 @@ const spaceMono = Space_Mono({ subsets: ['latin'], weight: ['400'] })
 
 const ReflowCanvas = nextDynamic(
   () => import('@/components/playground/reflow-canvas').then(mod => mod.ReflowCanvas),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    // Skeleton: reserva el aspect ratio inicial del canvas (mismo `aspect`
+    // que se le pasa abajo: 2.4) para evitar CLS. El skeleton final puede
+    // crecer por encima cuando el text reflujea, pero al menos el primer
+    // pixel coincide. Un caption-mono tenue da contexto de qué carga.
+    loading: () => (
+      <div
+        className="relative w-full bg-neutral-950/40 border border-neutral-900 overflow-hidden"
+        style={{ aspectRatio: '2.4 / 1' }}
+        aria-hidden
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-caption-mono-sm uppercase text-zinc-700 animate-pulse font-mono">
+            laying out paragraph
+          </span>
+        </div>
+      </div>
+    ),
+  },
 )
 
+// Lead orientado a la metáfora lógica: la proposición que se inserta en
+// un argumento desplaza el razonamiento. Mantiene la descripción técnica
+// (@chenglou/pretext, 60fps) sin perder el guiño formal.
 const LEAD =
-  'Drag the red orb. As you move it, the paragraph below rearranges itself around the obstacle in real time, using @chenglou/pretext to recompute the line breaks every frame.'
+  'Drag the proposition. Like a premise inserted into an argument, it displaces the reasoning around it — the paragraph reflows in real time using @chenglou/pretext, recomputing line breaks every frame.'
 
-// Fragmento (reconstruido) de Ward Farnsworth, *The Socratic Method*
-// (Godine, 2021). El texto encaja con la metáfora visual: el obstáculo
-// no detiene al pensamiento, lo reorganiza.
-const QUOTE = `The Socratic method is not a way of finding answers. It is a way of seeing what you do not yet understand. Faced with a contradiction, the mind has two options: defend the position it already holds, or rearrange itself in the light of what has been said. The first is comfort; the second is thought. Socrates believed only the second has any future.
+// Paráfrasis (reconstruida) en la línea de Frege / Russell: una
+// proposición se entiende como función de sus argumentos, y al cambiar
+// uno de ellos toda la forma debe reorganizarse a su alrededor sin
+// romperse. El texto encaja con la metáfora visual del orb que reflujea
+// el párrafo: la estructura sobrevive cuando se adapta, no cuando
+// resiste.
+const QUOTE = `A proposition is not a fixed string of words. It is a form — a function waiting for its arguments. When one term is replaced, every other element of the sentence must reorganize itself around the new value, and the form survives only if it can accommodate the change without contradiction. To think clearly is, in part, to feel where those changes propagate.
 
-The method does not promise certainty. It promises movement — small, deliberate, and continual. Each question is a kind of obstacle placed in the path of an opinion, to test whether the opinion can flow around it gracefully or whether it breaks. The opinions that survive are not the ones that resisted; they are the ones that adapted.
+The same applies to an argument. A premise is never neutral: once it enters, the surrounding reasoning has to make room for it. Conclusions that depended on a previous arrangement either dissolve, or rearrange themselves into a new shape that the new premise will tolerate. The argument that survives is not the one that resisted the premise, but the one that re-rendered around it.
 
-To think Socratically, then, is to learn how to be wrong without collapse. It is to recognize that the shape of one's own understanding is provisional, and to make a habit of letting it be redrawn.`
+Logic is, in this sense, less a set of fixed truths than a discipline of accommodation: a way of moving terms through a structure and watching where the structure must yield.`
 
-const ATTRIBUTION = '— Ward Farnsworth, The Socratic Method'
+const ATTRIBUTION = '— after Frege & Russell'
+
+// Pequeña fórmula proposicional como tipográfico-conceptual badge —
+// `P ∧ Q → R` (si P y Q, entonces R). Caja monoespaciada, glifos Unicode
+// estándar que Space Mono renderiza nativamente.
+const FORMULA = 'P ∧ Q → R'
 
 export default function PlaygroundPage() {
   return (
-    <main className="relative min-h-screen bg-black text-white">
+    <main id="main-content" className="relative min-h-screen bg-black text-white">
       <ClientOnly>
         <Nav />
       </ClientOnly>
 
-      <article className="max-w-5xl mx-auto px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+      <article className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-24 md:pt-20 md:pb-32">
         <header className="mb-10 md:mb-14 flex flex-col gap-4 max-w-2xl">
-          <p className={`text-[11px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
-            Playground · 2026 · pretext demo
+          <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className}`}>
+            Playground · 2026 · {FORMULA}
           </p>
-          <h1 className={`text-4xl sm:text-5xl md:text-6xl font-light tracking-wider ${microgramma.className}`}>
+          <h1 className={`text-display-xl ${microgramma.className}`}>
             playground
           </h1>
           <ShrinkwrapText
@@ -54,12 +84,13 @@ export default function PlaygroundPage() {
         </header>
 
         {/*
-          La demo en sí: el canvas de reflujo. El obstáculo rojo se arrastra
-          y el texto se re-rompe alrededor en tiempo real, vía pretext.
-          El texto es un fragmento de Farnsworth sobre el método socrático
-          — la metáfora visual y el contenido están alineados.
-          touch-action: none vive solo dentro del orb, así que el resto de
-          la página scrollea normal en mobile.
+          La demo: canvas de reflujo. El obstáculo rojo es una variable
+          proposicional (`P`) que el user arrastra; el texto se re-rompe
+          alrededor en tiempo real, vía pretext. La metáfora visual y el
+          contenido están alineados — un argumento que se reorganiza
+          alrededor de la premisa que se inserta. touch-action: none
+          vive solo dentro del orb, así que el resto de la página
+          scrollea normal en mobile.
         */}
         <ClientOnly>
           <ReflowCanvas
@@ -68,7 +99,7 @@ export default function PlaygroundPage() {
             lineHeight={28}
             aspect={2.4}
             obstacleRadius={84}
-            obstacleLabel="drag"
+            obstacleLabel="P"
             color="rgb(220, 220, 220)"
             obstacleColor="#dc2626"
             obstacleRingColor="#ffffff"
@@ -77,19 +108,19 @@ export default function PlaygroundPage() {
         </ClientOnly>
 
         <p
-          className={`mt-4 text-right pr-2 text-[11px] uppercase tracking-[0.18em] text-gray-500 ${spaceMono.className}`}
+          className={`mt-4 text-right pr-2 text-caption-mono-sm uppercase text-gray-500 ${spaceMono.className}`}
         >
           {ATTRIBUTION}
         </p>
-        <p className={`mt-2 text-[11px] uppercase tracking-[0.18em] text-gray-600 ${spaceMono.className} text-center`}>
-          Drag the orb · the paragraph rearranges around it
+        <p className={`mt-2 text-caption-mono-sm uppercase text-gray-600 ${spaceMono.className} text-center`}>
+          Drag the proposition · the argument rearranges around it
         </p>
 
         <hr className="my-16 md:my-20 border-neutral-800" />
 
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-3xl">
           <div className="space-y-3">
-            <p className={`text-[11px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+            <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className}`}>
               How it works
             </p>
             <ShrinkwrapText
@@ -101,7 +132,7 @@ export default function PlaygroundPage() {
             />
           </div>
           <div className="space-y-3">
-            <p className={`text-[11px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+            <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className}`}>
               Mobile
             </p>
             <ShrinkwrapText

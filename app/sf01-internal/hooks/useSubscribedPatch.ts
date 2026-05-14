@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { effects, getEffectById } from '../lib/effects'
 import { SESSION_CHANNEL, type PatchMessage } from '../lib/channel'
-import type { Effect, PatchValues } from '../lib/types'
+import type { Effect, PatchValues } from '@/lib/shaders/sf01/types'
 import type { BlendMode } from '../lib/blend'
 import { ZERO_BANDS, type AudioBands } from './useAudioSource'
 import { DEFAULT_OVERLAY, type OverlayState } from '../lib/overlay'

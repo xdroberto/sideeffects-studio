@@ -30,6 +30,36 @@ body {
     rgb(var(--background-start-rgb));
 }
 
+/* ─── Accesibilidad: focus-visible global ────────────────────────────
+   Foco visible coherente para keyboard navigation. Aplicamos sólo
+   a `<a>`, `<button>`, `<input>`, `<textarea>`, `<select>` y
+   elementos con `[tabindex]`. Quedan fuera:
+   - canvas / video / iframe → elementos visuales que no deben ganar
+     un outline rojo (la demo de SF-01, la galería, los embeds Spotify).
+   - elementos con clase `focus-visible:ring-*` ya tienen su propio
+     estilo de ring (shadcn UI). El outline coexiste con el ring,
+     pero usamos outline-offset 2px para que no choquen.
+   El outline-offset 2px da aire visual.
+   ─────────────────────────────────────────────────────────────────── */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+canvas:focus-visible,
+video:focus-visible,
+iframe:focus-visible,
+[aria-hidden='true']:focus-visible {
+  outline: none;
+}
+
 @keyframes fader-glow {
   0% {
     box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);

@@ -1,9 +1,9 @@
-import type { Effect } from './types'
-import { moire } from './shaders/moire'
-import { reactionDiffusion } from './shaders/reactionDiffusion'
-import { domainWarping } from './shaders/domainWarping'
-import { raymarchSDF } from './shaders/raymarchSDF'
-import { voronoi } from './shaders/voronoi'
+import type { Effect } from '@/lib/shaders/sf01/types'
+import { moire } from '@/lib/shaders/sf01/moire'
+import { reactionDiffusion } from '@/lib/shaders/sf01/reactionDiffusion'
+import { domainWarping } from '@/lib/shaders/sf01/domainWarping'
+import { raymarchSDF } from '@/lib/shaders/sf01/raymarchSDF'
+import { voronoi } from '@/lib/shaders/sf01/voronoi'
 
 export const effects: Effect[] = [
   moire,

@@ -1,12 +1,47 @@
 "use client"
 
-import { useEffect, useMemo, useRef } from "react"
-import { Canvas, useFrame } from "@react-three/fiber"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { Canvas, useFrame, useThree } from "@react-three/fiber"
 import { Sparkles } from "@react-three/drei"
 import * as THREE from "three"
 
 // Global mouse state updated via window listener (bypasses z-index blocking)
 const globalMouse = { x: 0, y: 0 }
+
+/**
+ * Parallax sutil de cámara — dolly horizontal/vertical de ±0.4 unidades
+ * en respuesta al puntero global. Suma al `rotation` interno del
+ * diamante: el diamante rota visiblemente (±~13°) mientras la cámara
+ * acompaña con un desplazamiento tenue de paralaje, dando profundidad
+ * 3D sin que ninguno de los dos efectos compita.
+ */
+function CameraParallax() {
+    const { camera } = useThree()
+    const base = useRef({ x: 0, y: 2 })
+    const smoothed = useRef({ x: 0, y: 0 })
+
+    useEffect(() => {
+        base.current = { x: camera.position.x, y: camera.position.y }
+    }, [camera])
+
+    useFrame(() => {
+        smoothed.current.x = THREE.MathUtils.lerp(
+            smoothed.current.x,
+            globalMouse.x,
+            0.04,
+        )
+        smoothed.current.y = THREE.MathUtils.lerp(
+            smoothed.current.y,
+            globalMouse.y,
+            0.04,
+        )
+        camera.position.x = base.current.x + smoothed.current.x * 0.4
+        camera.position.y = base.current.y + smoothed.current.y * 0.25
+        camera.lookAt(0, 0, 0)
+    })
+
+    return null
+}
 
 function Diamond() {
     const groupRef = useRef<THREE.Group>(null)
@@ -217,6 +252,10 @@ function TwinklingStars({ count = 1000 }: { count?: number }) {
     )
 }
 
+// Longitud máxima del trail por shooting star. Define el tamaño del
+// buffer pre-alocado para evitar dispose+new en cada frame.
+const SHOOTING_STAR_TRAIL_LEN = 12
+
 function ShootingStars() {
     const maxStars = 5
     const meshRef = useRef<THREE.Group>(null)
@@ -229,19 +268,44 @@ function ShootingStars() {
             active: false,
             nextSpawn: Math.random() * 5 + 3, // 3-8 seconds until first spawn
             trail: [] as THREE.Vector3[],
+            // Buffer reutilizable: pre-aloja TRAIL_LEN puntos. Antes se
+            // creaba `new Float32Array(trail.length * 3)` + new
+            // BufferGeometry + dispose() en cada frame de cada star
+            // activa → presión sobre GC y churn de buffers GPU.
+            positionBuffer: new Float32Array(SHOOTING_STAR_TRAIL_LEN * 3),
         }))
     }, [])
 
+    // Geometrías persistentes ligadas a cada line. Se crean una vez con
+    // tamaño fijo y solo se marca needsUpdate cuando cambia el contenido.
+    const lineGeometries = useMemo(() => {
+        return stars.map(star => {
+            const geo = new THREE.BufferGeometry()
+            geo.setAttribute(
+                'position',
+                new THREE.BufferAttribute(star.positionBuffer, 3),
+            )
+            // drawRange controla cuántos vértices se dibujan sin tocar el buffer.
+            geo.setDrawRange(0, 0)
+            return geo
+        })
+    }, [stars])
+
+    useEffect(() => {
+        return () => {
+            // Cleanup explícito al desmontar.
+            lineGeometries.forEach(g => g.dispose())
+        }
+    }, [lineGeometries])
+
     useFrame((state, delta) => {
         if (!meshRef.current) return
-        const time = state.clock.getElapsedTime()
 
-        stars.forEach((star, idx) => {
+        stars.forEach((star) => {
             if (!star.active) {
                 star.nextSpawn -= delta
                 if (star.nextSpawn <= 0) {
                     // Spawn from random edge
-                    const side = Math.random()
                     const startX = (Math.random() - 0.5) * 40
                     const startY = 10 + Math.random() * 15
                     const startZ = -5 + Math.random() * -20
@@ -263,7 +327,9 @@ function ShootingStars() {
             }
 
             // Move
-            star.position.add(star.velocity.clone().multiplyScalar(delta))
+            star.position.x += star.velocity.x * delta
+            star.position.y += star.velocity.y * delta
+            star.position.z += star.velocity.z * delta
             star.progress += delta
 
             // Deactivate after 1.5s
@@ -278,24 +344,29 @@ function ShootingStars() {
         stars.forEach((star, idx) => {
             const line = children[idx] as THREE.Line
             if (!line) return
+            const geo = lineGeometries[idx]
+            if (!geo) return
 
             if (star.active) {
-                // Build trail
-                star.trail.push(star.position.clone())
-                if (star.trail.length > 12) star.trail.shift()
+                // Build trail (cap fijo, sin Vector3.clone alloc)
+                star.trail.push(new THREE.Vector3(star.position.x, star.position.y, star.position.z))
+                if (star.trail.length > SHOOTING_STAR_TRAIL_LEN) star.trail.shift()
 
-                const positions = new Float32Array(star.trail.length * 3)
-                star.trail.forEach((p, i) => {
-                    positions[i * 3] = p.x
-                    positions[i * 3 + 1] = p.y
-                    positions[i * 3 + 2] = p.z
-                })
-                line.geometry.dispose()
-                line.geometry = new THREE.BufferGeometry()
-                line.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-                line.visible = true;
-                (line.material as THREE.LineBasicMaterial).opacity = 1 - star.progress / 1.5
+                const buf = star.positionBuffer
+                for (let i = 0; i < star.trail.length; i++) {
+                    const p = star.trail[i]!
+                    buf[i * 3] = p.x
+                    buf[i * 3 + 1] = p.y
+                    buf[i * 3 + 2] = p.z
+                }
+                const attr = geo.attributes.position as THREE.BufferAttribute
+                attr.needsUpdate = true
+                geo.setDrawRange(0, star.trail.length)
+                line.visible = true
+                ;(line.material as THREE.LineBasicMaterial).opacity =
+                    1 - star.progress / 1.5
             } else {
+                geo.setDrawRange(0, 0)
                 line.visible = false
             }
         })
@@ -303,9 +374,12 @@ function ShootingStars() {
 
     return (
         <group ref={meshRef}>
-            {Array.from({ length: maxStars }, (_, i) => (
+            {stars.map((_, i) => (
                 <line key={i}>
-                    <bufferGeometry />
+                    {/* `attach="geometry"` re-usa la geometría pre-alocada
+                        (con buffer fijo + drawRange) en vez de crear una
+                        nueva por frame. */}
+                    <primitive object={lineGeometries[i]} attach="geometry" />
                     <lineBasicMaterial color="white" transparent opacity={0.8} linewidth={1} />
                 </line>
             ))}
@@ -314,7 +388,30 @@ function ShootingStars() {
 }
 
 export function DiamondScene() {
+    // Reduced-motion guard: si el OS pide reduce-motion, sustituimos toda
+    // la escena 3D animada por un fallback estático (gradient radial +
+    // SVG decorativo). Three.js gasta GPU+CPU permanentemente con sus
+    // useFrame loops — guardar contra ello es lo a11y-correct para gente
+    // con sensibilidad vestibular. La identidad visual se preserva con
+    // el glow rojo center-out que ya monta el overlay normal.
+    const [reduceMotion, setReduceMotion] = useState(false)
+
     useEffect(() => {
+        if (typeof window === 'undefined') return
+        const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+        const update = () => setReduceMotion(mq.matches)
+        update()
+        // Listener dinámico — el user puede cambiar la preferencia.
+        if (mq.addEventListener) mq.addEventListener('change', update)
+        else mq.addListener(update)
+        return () => {
+            if (mq.removeEventListener) mq.removeEventListener('change', update)
+            else mq.removeListener(update)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (reduceMotion) return // No mouse tracking en modo reducido.
         const handleMouseMove = (e: MouseEvent) => {
             // Normalize to -1 to 1 range (same as R3F state.mouse)
             globalMouse.x = (e.clientX / window.innerWidth) * 2 - 1
@@ -322,12 +419,44 @@ export function DiamondScene() {
         }
         window.addEventListener('mousemove', handleMouseMove)
         return () => window.removeEventListener('mousemove', handleMouseMove)
-    }, [])
+    }, [reduceMotion])
+
+    if (reduceMotion) {
+        // Static fallback: mantiene el "campo rojo center-out" del hero
+        // sin canvas animado. Diamante simbólico en SVG outline para
+        // recordar la forma sin movimiento perpetuo.
+        return (
+            <div className="fixed inset-0 z-0 bg-black overflow-hidden" aria-hidden>
+                <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                        background:
+                            'radial-gradient(circle at center, rgba(255,0,0,0.08) 0%, transparent 60%)',
+                    }}
+                />
+                <svg
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"
+                    width="320"
+                    height="240"
+                    viewBox="-5 -3 10 6"
+                    fill="none"
+                    stroke="rgba(255,0,0,0.5)"
+                    strokeWidth="0.04"
+                    strokeLinejoin="round"
+                >
+                    {/* Diamante schematic — wave-line dentro de un rombo abierto */}
+                    <path d="M -5 0 L 0 3 L 5 0 L 0 -3 Z" />
+                    <path d="M -5 0 Q -2.5 1.2 0 0 T 5 0" />
+                </svg>
+            </div>
+        )
+    }
 
     return (
         <div className="fixed inset-0 z-0 bg-black">
             <Canvas camera={{ position: [0, 2, 12], fov: 45 }} gl={{ antialias: true, alpha: false, stencil: false, depth: true }}>
                 <color attach="background" args={['black']} />
+                <CameraParallax />
                 <Diamond />
 
                 {/* Background Atmosphere */}

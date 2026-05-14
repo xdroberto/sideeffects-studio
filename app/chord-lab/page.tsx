@@ -10,7 +10,23 @@ import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 const DisplayVisualizer = nextDynamic(
   () =>
     import('@/components/chord-lab/display-visualizer').then(m => m.DisplayVisualizer),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    // Skeleton: caja del tamaño que va a ocupar el visualizer (96px alto,
+    // ancho fluido). Línea ondulada decorativa color green/30 para
+    // hint del display LCD, sin animation hasta que arranque el real.
+    loading: () => (
+      <div
+        className="w-full bg-black/40 border border-green-500/10 rounded-sm flex items-center justify-center"
+        style={{ height: 96 }}
+        aria-hidden
+      >
+        <span className="text-[9px] uppercase tracking-[0.22em] text-green-500/30 animate-pulse font-mono">
+          booting · firmware
+        </span>
+      </div>
+    ),
+  },
 )
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
@@ -37,20 +53,20 @@ const FEATURES = [
 
 export default function ChordLabPage() {
   return (
-    <main className="relative min-h-screen bg-black text-white">
+    <main id="main-content" className="relative min-h-screen bg-black text-white">
       <Nav />
 
-      <article className="max-w-6xl mx-auto px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+      <article className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 md:pt-20 md:pb-32">
         {/* Hero */}
         <header className="mb-10 md:mb-14 max-w-2xl">
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-            <p className={`text-[11px] uppercase tracking-[0.22em] text-red-500 ${spaceMono.className}`}>
+            <p className={`text-caption-mono uppercase text-red-500 ${spaceMono.className}`}>
               Chord Lab · Coming Q3 2026
             </p>
           </div>
           <h1
-            className={`text-5xl sm:text-6xl md:text-7xl font-light tracking-wider mb-6 ${microgramma.className}`}
+            className={`text-display-xl mb-6 ${microgramma.className}`}
           >
             chord lab
           </h1>
@@ -70,13 +86,13 @@ export default function ChordLabPage() {
 
         {/* Features list */}
         <section className="mb-16 border-t border-neutral-900 pt-10">
-          <p className={`text-[11px] uppercase tracking-[0.22em] text-red-500 ${spaceMono.className} mb-6`}>
+          <p className={`text-caption-mono uppercase text-red-500 ${spaceMono.className} mb-6`}>
             Will ship with
           </p>
           <ul className={`${spaceMono.className} space-y-3 max-w-xl`}>
             {FEATURES.map((f, i) => (
               <li key={f} className="flex items-baseline gap-4 text-sm sm:text-base text-gray-300">
-                <span className="text-[10px] tabular-nums text-red-500/70">
+                <span className="text-caption-mono-sm tabular-nums text-red-500/70">
                   {String(i + 1).padStart(2, '0')}
                 </span>
                 <span>{f}</span>
@@ -89,7 +105,7 @@ export default function ChordLabPage() {
         <section className="border-t border-neutral-900 pt-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="space-y-2">
-              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+              <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className}`}>
                 Status
               </p>
               <p className="text-base text-white">UI prototype · Q3 2026</p>
@@ -99,7 +115,7 @@ export default function ChordLabPage() {
               </p>
             </div>
             <div className="space-y-2">
-              <p className={`text-[10px] uppercase tracking-[0.18em] text-red-500 ${spaceMono.className}`}>
+              <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className}`}>
                 Who is it for
               </p>
               <p className="text-base text-white">Anyone who hears chords better than they read them.</p>
@@ -109,6 +125,23 @@ export default function ChordLabPage() {
                 same — the use is yours.
               </p>
             </div>
+          </div>
+
+          {/* Early access CTA — discreto, consistente con SF-01 */}
+          <div className="mt-10 pt-8 border-t border-neutral-900">
+            <p className={`text-caption-mono-sm uppercase text-red-500 ${spaceMono.className} mb-2`}>
+              Early access
+            </p>
+            <p className={`${spaceMono.className} text-sm text-gray-400 leading-relaxed`}>
+              Want a heads-up when the firmware lands?{' '}
+              <a
+                href="mailto:robertobecerrilhurtado@gmail.com?subject=Chord%20Lab%20early%20access"
+                className="text-white underline underline-offset-4 decoration-red-500/60 hover:decoration-red-500 transition-colors"
+              >
+                drop a line
+              </a>
+              .
+            </p>
           </div>
         </section>
       </article>
@@ -121,28 +154,48 @@ export default function ChordLabPage() {
 }
 
 /**
- * Chassis con look Teenage Engineering: panel gris cálido, esquinas
- * redondeadas, screws ornamentales en las esquinas, pantalla central
- * verde mostrando "OFF".
+ * Chassis con look synth modular oscuro (Make Noise / Mutable Instruments
+ * / TR-808): panel negro con bisel metálico sutil, screws oscuros en las
+ * esquinas, pantalla LCD verde, acentos rojo signal.
  */
 function ToyChassis() {
   return (
     <div className="mx-auto max-w-3xl">
-      <div className="relative rounded-[28px] bg-gradient-to-b from-neutral-300 to-neutral-400 p-6 sm:p-8 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.6)]">
+      <div className="relative rounded-[28px] bg-gradient-to-b from-zinc-900 via-neutral-950 to-black p-4 sm:p-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),inset_0_-1px_0_rgba(0,0,0,0.6),0_30px_80px_-20px_rgba(0,0,0,0.7)] ring-1 ring-white/[0.03]">
         {/* "Tornillos" decorativos en las 4 esquinas */}
         <Screw className="top-3 left-3" />
         <Screw className="top-3 right-3" />
         <Screw className="bottom-3 left-3" />
         <Screw className="bottom-3 right-3" />
 
+        {/* Lab serial tag — etiqueta de prototype/QA en estética synth
+            modular: fondo negro, borde rojo, texto rojo. Ligera rotación
+            para sentirse físico. Aria-hidden porque el texto se duplica
+            abajo en el caption ("controls are decorative"). */}
+        <span
+          aria-hidden
+          className={`pointer-events-none absolute -top-2 right-6 sm:right-12 z-10 rotate-[-4deg] select-none border border-red-500/70 bg-black/90 px-2 py-0.5 shadow-[0_2px_6px_rgba(0,0,0,0.5)] ${spaceMono.className}`}
+        >
+          <span className="block text-[9px] uppercase tracking-[0.18em] leading-tight text-red-500">
+            prototype
+          </span>
+          <span className="block text-[7px] uppercase tracking-[0.18em] leading-tight text-red-500/70">
+            not functional
+          </span>
+        </span>
+
         {/* Top bar: brand + power led */}
         <div className="flex items-center justify-between mb-5 px-1">
-          <span className={`text-[10px] uppercase tracking-[0.22em] text-neutral-700 ${spaceMono.className}`}>
+          <span className={`text-caption-mono-sm uppercase text-white/85 ${spaceMono.className}`}>
             side_effects · cl-1
           </span>
           <div className="flex items-center gap-2">
-            <span className="block w-1.5 h-1.5 rounded-full bg-neutral-700/50" />
-            <span className={`text-[9px] uppercase tracking-[0.2em] text-neutral-700/70 ${spaceMono.className}`}>
+            {/* Power LED — breathing pulse para sugerir idle/on */}
+            <span
+              className="block w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]"
+              style={{ animation: 'cl-breathe 2.4s ease-in-out infinite' }}
+            />
+            <span className={`text-[9px] uppercase tracking-[0.2em] text-zinc-400 ${spaceMono.className}`}>
               power
             </span>
           </div>
@@ -159,10 +212,10 @@ function ToyChassis() {
           {/* Display */}
           <Display />
 
-          {/* Right knob cluster */}
+          {/* Right knob cluster — `vol` knob lleva automation sutil */}
           <div className="flex flex-col gap-3 shrink-0 hidden sm:flex">
             <Knob label="bpm" />
-            <Knob label="vol" />
+            <Knob label="vol" automation />
           </div>
         </div>
 
@@ -171,35 +224,66 @@ function ToyChassis() {
           <Knob label="key" />
           <Knob label="oct" />
           <Knob label="bpm" />
-          <Knob label="vol" />
+          <Knob label="vol" automation />
         </div>
 
         {/* 8-pad grid */}
-        <div className="grid grid-cols-4 gap-2 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           {['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'I'].map((label, i) => (
             <Pad key={i} label={label} index={i} />
           ))}
         </div>
 
-        {/* Mode + record row */}
+        {/* Mode + record row — `play` LED en idle pulse verde tenue */}
         <div className="flex items-center justify-between gap-3 mt-3 px-1">
           <div className="flex items-center gap-3">
-            <ToggleLed label="play" active={false} color="green" />
+            <ToggleLed label="play" active color="green" idle />
             <ToggleLed label="rec" active={false} color="red" />
             <ToggleLed label="loop" active={false} color="yellow" />
           </div>
-          <div className={`text-[9px] uppercase tracking-[0.2em] text-neutral-700/70 ${spaceMono.className}`}>
+          <div className={`text-[9px] uppercase tracking-[0.2em] text-zinc-500 ${spaceMono.className}`}>
             v 0.1.0 · build 14
           </div>
         </div>
       </div>
 
-      <p className={`mt-4 text-center text-[10px] uppercase tracking-[0.22em] text-gray-500 ${spaceMono.className}`}>
-        controls are decorative · v1 ships Q3 2026
+      <p className={`mt-4 text-center text-caption-mono-sm uppercase text-gray-500 ${spaceMono.className}`}>
+        mockup · controls are decorative · v1 ships Q3 2026
       </p>
+
+      {/* Keyframes locales para las micro-animaciones del chassis.
+          Plain <style> con CSS string para no depender de styled-jsx
+          y no tocar globals.css (fuera de scope D.3). Los nombres
+          `cl-*` están namespaced a chord-lab. */}
+      <style
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: CHORD_LAB_KEYFRAMES }}
+      />
     </div>
   )
 }
+
+const CHORD_LAB_KEYFRAMES = `
+@keyframes cl-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+@keyframes cl-idle-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.9; }
+}
+@keyframes cl-knob-automation {
+  0%, 100% { transform: rotate(var(--knob-rot)); }
+  50% { transform: rotate(calc(var(--knob-rot) + 6deg)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="cl-breathe"],
+  [style*="cl-idle-pulse"],
+  [style*="cl-knob-automation"] {
+    animation: none !important;
+  }
+}
+`
 
 /* ── Internal toy components ───────────────────────────────────────── */
 
@@ -207,27 +291,33 @@ function Screw({ className = '' }: { className?: string }) {
   return (
     <span
       aria-hidden
-      className={`absolute w-2.5 h-2.5 rounded-full bg-neutral-500 shadow-[inset_0_1px_2px_rgba(0,0,0,0.4),inset_0_-1px_1px_rgba(255,255,255,0.15)] ${className}`}
+      className={`absolute w-2.5 h-2.5 rounded-full bg-gradient-to-b from-zinc-600 to-zinc-800 shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),inset_0_-1px_2px_rgba(0,0,0,0.6),0_1px_1px_rgba(0,0,0,0.5)] ${className}`}
     >
-      <span className="block w-full h-px bg-neutral-700/60 mt-[5px] rotate-[35deg]" />
+      <span className="block w-full h-px bg-black/70 mt-[5px] rotate-[35deg]" />
     </span>
   )
 }
 
-function Knob({ label }: { label: string }) {
+function Knob({ label, automation = false }: { label: string; automation?: boolean }) {
   // Animación decorativa: cada knob mantiene una rotación leve aleatoria.
   const rot = useStableRandom(label) * 240 - 120 // -120..120 deg
+  // Si `automation`, el knob oscila ±6° sobre su rotación base, simulando
+  // LFO/automation activo. CSS variable para que la keyframe pueda
+  // recomponer el transform.
+  const innerStyle: React.CSSProperties = automation
+    ? ({
+        ['--knob-rot' as string]: `${rot}deg`,
+        animation: 'cl-knob-automation 5.2s ease-in-out infinite',
+      } as React.CSSProperties)
+    : { transform: `rotate(${rot}deg)` }
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-b from-neutral-700 to-neutral-900 shadow-[inset_0_2px_3px_rgba(255,255,255,0.15),0_2px_4px_rgba(0,0,0,0.4)]">
-        <div
-          className="absolute inset-0"
-          style={{ transform: `rotate(${rot}deg)` }}
-        >
-          <span className="absolute top-1.5 left-1/2 -translate-x-1/2 w-0.5 h-2.5 bg-red-500 rounded-full" />
+      <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-b from-zinc-700 to-zinc-950 ring-1 ring-white/[0.06] shadow-[inset_0_2px_3px_rgba(255,255,255,0.12),inset_0_-1px_2px_rgba(0,0,0,0.6),0_2px_6px_rgba(0,0,0,0.6)]">
+        <div className="absolute inset-0" style={innerStyle}>
+          <span className="absolute top-1.5 left-1/2 -translate-x-1/2 w-0.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_4px_rgba(239,68,68,0.6)]" />
         </div>
       </div>
-      <span className={`text-[9px] uppercase tracking-[0.2em] text-neutral-700 ${spaceMono.className}`}>
+      <span className={`text-[9px] uppercase tracking-[0.2em] text-zinc-400 ${spaceMono.className}`}>
         {label}
       </span>
     </div>
@@ -239,12 +329,12 @@ function Pad({ label, index }: { label: string; index: number }) {
     <button
       type="button"
       disabled
-      className="aspect-square rounded-xl bg-gradient-to-b from-neutral-200 to-neutral-300 border border-neutral-400/60 shadow-[inset_0_-2px_2px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.15)] flex flex-col items-center justify-center cursor-not-allowed select-none"
+      className="aspect-square min-h-[64px] min-w-[64px] rounded-xl bg-gradient-to-b from-zinc-900 to-black border border-red-500/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),inset_0_-2px_4px_rgba(0,0,0,0.6),0_0_10px_rgba(239,68,68,0.12)] flex flex-col items-center justify-center cursor-not-allowed select-none"
     >
-      <span className={`text-base sm:text-lg text-neutral-700 ${spaceMono.className}`}>
+      <span className={`text-lg sm:text-xl text-white/90 ${spaceMono.className}`}>
         {label}
       </span>
-      <span className={`text-[8px] uppercase tracking-[0.2em] text-neutral-500/70 ${spaceMono.className}`}>
+      <span className={`text-[8px] uppercase tracking-[0.2em] text-red-500/60 ${spaceMono.className}`}>
         {String(index + 1).padStart(2, '0')}
       </span>
     </button>
@@ -255,10 +345,13 @@ function ToggleLed({
   label,
   active,
   color,
+  idle = false,
 }: {
   label: string
   active: boolean
   color: 'green' | 'red' | 'yellow'
+  /** En idle state, el LED pulsa muy suavemente (modo ready). */
+  idle?: boolean
 }) {
   const colorClass =
     color === 'green'
@@ -266,12 +359,16 @@ function ToggleLed({
       : color === 'red'
       ? 'bg-red-500'
       : 'bg-amber-400'
+  const idleStyle: React.CSSProperties = idle
+    ? { animation: 'cl-idle-pulse 3.2s ease-in-out infinite' }
+    : {}
   return (
     <div className="flex items-center gap-1.5">
       <span
-        className={`block w-2 h-2 rounded-full ${active ? colorClass : 'bg-neutral-500/40'} ${active ? 'shadow-[0_0_6px_currentColor]' : ''}`}
+        className={`block w-2 h-2 rounded-full ${active ? colorClass : 'bg-zinc-700 ring-1 ring-white/[0.06]'} ${active ? 'shadow-[0_0_6px_currentColor]' : ''}`}
+        style={idleStyle}
       />
-      <span className={`text-[9px] uppercase tracking-[0.2em] text-neutral-700/70 ${spaceMono.className}`}>
+      <span className={`text-[9px] uppercase tracking-[0.2em] text-zinc-400 ${spaceMono.className}`}>
         {label}
       </span>
     </div>

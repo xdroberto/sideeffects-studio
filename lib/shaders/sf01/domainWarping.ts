@@ -1,4 +1,4 @@
-import type { Effect } from '../types'
+import type { Effect } from './types'
 import { noise2D } from './common/noise'
 
 const fragment = /* glsl */ `

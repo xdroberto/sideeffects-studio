@@ -1,4 +1,4 @@
-import type { PatchValues } from './types'
+import type { PatchValues } from '@/lib/shaders/sf01/types'
 import type { AudioBands } from '../hooks/useAudioSource'
 import type { OverlayState } from './overlay'
 import type { BlendMode } from './blend'

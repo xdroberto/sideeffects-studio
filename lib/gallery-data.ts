@@ -2,18 +2,45 @@ import fs from 'fs'
 import path from 'path'
 
 // ─── Types ──────────────────────────────────────────────────────────
-export interface GalleryItem {
+//
+// Gallery items are a discriminated union over `mediaType`:
+//
+//   'image'         → static image, stored under /public/uploads
+//   'video-mp4'     → self-hosted MP4/WebM video, stored under /public/uploads
+//   'video-youtube' → YouTube embed by id (e.g. 'dQw4w9WgXcQ')
+//
+// All variants share base fields (id, title, description, sortOrder, etc).
+// Type-specific fields live on their own variant.
+
+export interface GalleryItemBase {
     id: string
     title: string
     description: string
-    imagePath: string
     featured: boolean
     aspectRatio: string
     sortOrder: number
-    mediaType: 'image' | 'video'
-    videoUrl?: string          // YouTube/Vimeo embed URL
-    previewVideoPath?: string  // Short clip for grid preview
 }
+
+export interface GalleryItemImage extends GalleryItemBase {
+    mediaType: 'image'
+    imagePath: string          // /uploads/xxx.png|jpg|webp
+}
+
+export interface GalleryItemVideoMp4 extends GalleryItemBase {
+    mediaType: 'video-mp4'
+    videoPath: string          // /uploads/xxx.mp4|webm
+    posterPath?: string        // /uploads/xxx-poster.jpg (optional)
+}
+
+export interface GalleryItemYouTube extends GalleryItemBase {
+    mediaType: 'video-youtube'
+    youtubeId: string          // 11-char YouTube id, e.g. 'dQw4w9WgXcQ'
+    posterPath?: string        // optional override; default = YouTube maxres thumb
+}
+
+export type GalleryItem = GalleryItemImage | GalleryItemVideoMp4 | GalleryItemYouTube
+
+export type GalleryItemInput = Omit<GalleryItem, 'id'>
 
 interface GalleryData {
     items: GalleryItem[]
@@ -56,19 +83,21 @@ export function getGalleryItem(id: string): GalleryItem | undefined {
     return readData().items.find(item => item.id === id)
 }
 
-export function addGalleryItem(item: Omit<GalleryItem, 'id'>): GalleryItem {
+export function addGalleryItem(item: GalleryItemInput): GalleryItem {
     const data = readData()
-    const newItem: GalleryItem = { ...item, id: crypto.randomUUID() }
+    const newItem = { ...item, id: crypto.randomUUID() } as GalleryItem
     data.items.push(newItem)
     writeData(data)
     return newItem
 }
 
-export function updateGalleryItem(id: string, updates: Partial<Omit<GalleryItem, 'id'>>): GalleryItem | null {
+export function updateGalleryItem(id: string, updates: Partial<GalleryItemInput>): GalleryItem | null {
     const data = readData()
     const index = data.items.findIndex(item => item.id === id)
     if (index === -1) return null
-    data.items[index] = { ...data.items[index], ...updates }
+    // Merge while preserving the id; cast to GalleryItem since the discriminated
+    // union forbids partial spread without narrowing.
+    data.items[index] = { ...data.items[index], ...updates } as GalleryItem
     writeData(data)
     return data.items[index]
 }

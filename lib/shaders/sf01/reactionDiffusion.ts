@@ -1,4 +1,4 @@
-import type { Effect } from '../types'
+import type { Effect } from './types'
 
 const compute = /* glsl */ `
   precision highp float;

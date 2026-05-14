@@ -1,20 +1,21 @@
 'use client'
 
 import Link from 'next/link'
+import { Container } from '@/components/ui/container'
 
 export default function LicensingPage() {
   return (
-    <div className="min-h-screen bg-black text-white px-6 py-24 max-w-3xl mx-auto">
+    <Container id="main-content" width="prose" as="main" className="min-h-screen bg-black text-white py-24 md:py-32">
       <Link href="/" className="text-gray-500 hover:text-white transition-colors text-sm mb-12 block">
         ← Back
       </Link>
 
-      <h1 className="text-4xl font-light tracking-wider mb-2">Licensing</h1>
+      <h1 className="text-display-md mb-2">Licensing</h1>
       <p className="text-gray-500 text-sm mb-12">Last updated: March 2026</p>
 
       <div className="space-y-8 text-gray-300 leading-relaxed">
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Creative Commons</h2>
+          <h2 className="text-display-sm text-white mb-3">Creative Commons</h2>
           <p>
             All original generative artworks, visual designs, animations, and creative content
             published on this site are licensed under{' '}
@@ -40,7 +41,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Commissioned Works</h2>
+          <h2 className="text-display-sm text-white mb-3">Commissioned Works</h2>
           <p>
             Custom pieces, installations, and works created under commission are &copy; Roberto
             Becerril Hurtado. All rights reserved. These works are not covered by the CC license
@@ -49,7 +50,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Commissioning &amp; Collaboration</h2>
+          <h2 className="text-display-sm text-white mb-3">Commissioning &amp; Collaboration</h2>
           <p>
             Custom pieces, installations, and collaborative works are available for licensing.
             Terms are negotiated on a per-project basis. Licensing may include but is not
@@ -64,7 +65,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Open Source Components</h2>
+          <h2 className="text-display-sm text-white mb-3">Open Source Components</h2>
           <p>
             Portions of this site use open-source libraries (React, Three.js, Next.js, etc.)
             distributed under their respective licenses (MIT, Apache 2.0, etc.). These licenses
@@ -74,7 +75,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Third-Party Assets</h2>
+          <h2 className="text-display-sm text-white mb-3">Third-Party Assets</h2>
           <p>
             The &quot;philosopher bust&quot; icon used in the playground page is by Delapouite
             via{' '}
@@ -100,7 +101,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Prohibited Uses</h2>
+          <h2 className="text-display-sm text-white mb-3">Prohibited Uses</h2>
           <p>
             Without explicit written permission, you may not:
           </p>
@@ -113,7 +114,7 @@ export default function LicensingPage() {
         </section>
 
         <section>
-          <h2 className="text-white text-lg font-light tracking-wider mb-3">Inquiries</h2>
+          <h2 className="text-display-sm text-white mb-3">Inquiries</h2>
           <p>
             For licensing requests or questions, contact{' '}
             <a href="mailto:robertobecerrilhurtado@gmail.com" className="text-red-500 hover:text-red-400 transition-colors">
@@ -122,6 +123,6 @@ export default function LicensingPage() {
           </p>
         </section>
       </div>
-    </div>
+    </Container>
   )
 }

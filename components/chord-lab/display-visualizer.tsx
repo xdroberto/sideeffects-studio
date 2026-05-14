@@ -55,17 +55,24 @@ export function DisplayVisualizer({ width, height, color = '#4ade80', chordLabel
       ctx.lineTo(width, height / 2)
       ctx.stroke()
 
-      // Forma de onda — suma de senos con pequeño ruido determinista.
+      // Slow-modulated amplitude envelope para que la intensidad respire,
+      // no se sienta loop fijo.
+      const ampEnv = 0.78 + 0.22 * Math.sin(t * 0.35)
+
+      // Forma de onda — suma de senos con pequeño ruido para romper el
+      // loop perfecto (audit feedback: añadir ~5% noise).
       ctx.beginPath()
       const samples = Math.max(80, Math.floor(width / 2))
       for (let i = 0; i <= samples; i++) {
         const x = (i / samples) * width
         const phase = (i / samples) * Math.PI * 4
+        const noise = (Math.random() - 0.5) * 0.05
         const wave =
           Math.sin(phase + t * 1.6) * 0.5 +
           Math.sin(phase * 2.1 - t * 2.3) * 0.22 +
-          Math.sin(phase * 3.7 + t * 0.9) * 0.12
-        const y = height / 2 + wave * (height * 0.28)
+          Math.sin(phase * 3.7 + t * 0.9) * 0.12 +
+          noise
+        const y = height / 2 + wave * (height * 0.28) * ampEnv
         if (i === 0) ctx.moveTo(x, y)
         else ctx.lineTo(x, y)
       }
@@ -76,7 +83,8 @@ export function DisplayVisualizer({ width, height, color = '#4ade80', chordLabel
       ctx.stroke()
       ctx.shadowBlur = 0
 
-      // Barras de espectro fake al fondo (8 barras)
+      // Barras de espectro fake al fondo (8 barras) — añadimos noise
+      // de fondo para que no se sienta loop matemático limpio.
       const barCount = 8
       const padding = 4
       const barAreaH = Math.min(20, height * 0.28)
@@ -88,7 +96,8 @@ export function DisplayVisualizer({ width, height, color = '#4ade80', chordLabel
           0.5 *
             Math.sin(t * (1.2 + i * 0.27) + i * 1.3) *
             Math.cos(t * (0.7 + i * 0.11) - i * 0.6)
-        const h = Math.max(1, env * barAreaH)
+        const flicker = (Math.random() - 0.5) * 0.08
+        const h = Math.max(1, Math.min(1, env + flicker) * barAreaH * ampEnv)
         const x = padding + i * (barW + 2)
         const y = barAreaY + (barAreaH - h)
         ctx.fillStyle = `${color}cc`
