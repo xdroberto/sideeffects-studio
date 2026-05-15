@@ -19,7 +19,7 @@ function CCIcon({ className = "" }: { className?: string }) {
 
 export function Footer() {
   return (
-    <footer className="relative min-h-screen bg-black text-white pt-32 pb-8 px-4 overflow-hidden">
+    <footer className="relative min-h-screen bg-canvas text-white pt-32 pb-8 px-4 overflow-hidden">
       {/* ASCII backdrop sutil — sustituye la imagen Unsplash por un campo
           generativo blanco de baja densidad y baja opacidad. Pointer-events
           none → no captura clicks. */}
@@ -39,7 +39,7 @@ export function Footer() {
       <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
         <div className="space-y-4">
           <h3 className="text-xl font-light tracking-wider">CONNECT</h3>
-          <div className="space-y-2 text-gray-400">
+          <div className="space-y-2 text-ink-muted">
             <p>México</p>
             <a
               href="mailto:robertobecerrilhurtado@gmail.com"
@@ -48,7 +48,7 @@ export function Footer() {
               robertobecerrilhurtado@gmail.com
             </a>
           </div>
-          <div className="flex gap-4 text-gray-400">
+          <div className="flex gap-4 text-ink-muted">
             <a
               href="https://www.instagram.com/side_effects.art/"
               target="_blank"
@@ -72,7 +72,7 @@ export function Footer() {
 
         <div className="text-center space-y-6">
           <h2 className="text-3xl font-light tracking-wider">side_effects.art</h2>
-          <p className="text-gray-400 max-w-sm mx-auto">
+          <p className="text-ink-muted max-w-sm mx-auto">
             Exploring the intersection of code/art/creativity through generative art and interactive experiences.
           </p>
           <div className="pt-8">
@@ -89,7 +89,7 @@ export function Footer() {
 
         <div className="space-y-4">
           <h3 className="text-xl font-light tracking-wider">AVAILABILITY</h3>
-          <div className="space-y-2 text-gray-400">
+          <div className="space-y-2 text-ink-muted">
             <div className="flex justify-between">
               <span>Commissions</span>
               <span>Open</span>
@@ -104,7 +104,7 @@ export function Footer() {
 
       {/* Trust Badges */}
       <div className="relative z-10 max-w-6xl mx-auto mt-16 flex justify-center">
-        <div className="flex items-center gap-8 text-gray-500">
+        <div className="flex items-center gap-8 text-ink-subtle">
           <a
             href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
             target="_blank"
@@ -133,7 +133,7 @@ export function Footer() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto mt-8 pt-8 border-t border-gray-800">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-400">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-ink-muted">
           <div className="flex gap-6">
             <Link href="/terms" className="hover:text-signal transition-colors duration-200 ease-out">Terms</Link>
             <Link href="/privacy" className="hover:text-signal transition-colors duration-200 ease-out">Privacy</Link>

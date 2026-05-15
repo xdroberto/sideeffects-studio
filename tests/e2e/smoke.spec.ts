@@ -56,9 +56,10 @@ test.describe('Smoke — Gallery lightbox', () => {
     await expect(tile).toBeVisible({ timeout: 10_000 })
     await tile.click()
 
-    // Lightbox renders a close button with aria-label="Close". It only
-    // exists when the lightbox is open, so seeing it == lightbox opened.
-    const close = page.getByRole('button', { name: /^close$/i })
+    // Lightbox renders a close button with aria-label="Close lightbox".
+    // It only exists when the lightbox is open, so seeing it == lightbox
+    // opened.
+    const close = page.getByRole('button', { name: /^close lightbox$/i })
     await expect(close).toBeVisible({ timeout: 5_000 })
   })
 })
@@ -85,10 +86,10 @@ test.describe('Smoke — Playground', () => {
   test('drag orb is rendered and accessible', async ({ page }) => {
     await page.goto('/playground')
 
-    // The orb is a <button> with `aria-label` that begins with "Drag the
-    // proposition". This is the load-bearing interactive control of the
-    // playground page.
-    const orb = page.getByRole('button', { name: /^Drag the proposition/i })
+    // The orb is a <button> with aria-label "Drag the philosopher. The
+    // text reflows around it." This is the load-bearing interactive
+    // control of the playground page.
+    const orb = page.getByRole('button', { name: /^Drag the philosopher/i })
     await expect(orb).toBeVisible({ timeout: 15_000 })
   })
 })

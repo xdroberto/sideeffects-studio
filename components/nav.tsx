@@ -27,14 +27,22 @@ export function Nav({ className }: NavProps) {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  // Close drawer on Escape for keyboard users (WCAG 2.1.2 No Keyboard Trap).
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen])
+
   // Baseline hover/focus pattern — coherente con design tokens:
-  // - Color de reposo `text-gray-400` (≈ ink/muted), hover → `text-signal` (rojo del proyecto)
+  // - Color de reposo `text-ink-muted` (≈ ink/muted), hover → `text-signal` (rojo del proyecto)
   // - Active route → `text-signal` (red-500) sin hover (ya está en el destino)
   // - transition unificada: colors, 200ms, ease-out
   // - focus-visible: el outline global rojo en globals.css se encarga del keyboard ring
   const linkClass = (active: boolean) =>
     `transition-colors duration-200 ease-out ${
-      active ? 'text-signal' : 'text-gray-400 hover:text-signal focus-visible:text-signal'
+      active ? 'text-signal' : 'text-ink-muted hover:text-signal focus-visible:text-signal'
     }`
 
   // Gallery y About viven en la landing (`/`). Los anchors funcionan
@@ -80,11 +88,14 @@ export function Nav({ className }: NavProps) {
           {navItems}
         </div>
 
-        {/* Hamburger button */}
+        {/* Hamburger button — aria-expanded comunica el estado al screen
+            reader; aria-controls referencia el drawer overlay. */}
         <button
           onClick={toggleMenu}
-          className="md:hidden relative z-50 text-gray-400 hover:text-signal transition-colors duration-200 ease-out p-1"
+          className="md:hidden relative z-50 text-ink-muted hover:text-signal transition-colors duration-200 ease-out p-1"
           aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isOpen}
+          aria-controls="mobile-nav-drawer"
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -92,6 +103,7 @@ export function Nav({ className }: NavProps) {
 
       {/* Mobile overlay — tap-anywhere-to-close, fade in/out coherente */}
       <div
+        id="mobile-nav-drawer"
         className={cn(
           "fixed inset-0 z-40 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center gap-8 text-2xl transition-opacity duration-300 ease-out md:hidden",
           isOpen

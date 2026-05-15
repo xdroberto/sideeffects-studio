@@ -5,39 +5,39 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { voronoi } from '@/lib/shaders/sf01/voronoi'
 import { fullscreenVertex } from '@/lib/shaders/sf01/common/vertex'
+import { hexToRgb01 } from '@/lib/sf01/preview-config'
 
 /**
  * Preview público del shader Voronoi de SF-01.
  *
- * Reusa el mismo shader GLSL que el SF-01 interno completo, pero
- * expone solo 4 controles (Density, Motion, Hue Drift, Edge) en lugar
- * de los 10+ uniforms originales. Sin audio reactivity, sin overlays,
- * sin mix de decks — solo el efecto base.
+ * Reusa el mismo shader GLSL que el SF-01 interno completo. Sin audio
+ * reactivity, sin overlays, sin mix de decks — solo el efecto base.
+ *
+ * Toma `values` como un mapeo genérico de uniform name → number, así
+ * el demo unificado puede pasar el state del slider directo. Y `palette`
+ * con tres colores hex que se mapean a los uniforms u_colorA/B/edge.
  */
 
-export interface VoronoiControls {
-  density: number
-  motion: number
-  hueDrift: number
-  edge: number
-  /** Color A — vec3 normalizado [r, g, b] en 0..1. */
-  colorA: [number, number, number]
-  /** Color B — vec3 normalizado. */
-  colorB: [number, number, number]
-  /** Color del borde — vec3 normalizado. */
-  edgeColor: [number, number, number]
+export interface ShaderPalette {
+  a: string
+  b: string
+  edge: string
 }
 
-interface VoronoiPreviewProps {
-  controls: VoronoiControls
-  className?: string
+export interface VoronoiMeshProps {
+  values: Record<string, number>
+  palette: ShaderPalette
 }
 
-function VoronoiMesh({ controls }: { controls: VoronoiControls }) {
+/**
+ * Mesh únicamente — sin Canvas wrapper. Usado por el DemoCanvas
+ * unificado que comparte el contexto WebGL entre shaders.
+ */
+export function VoronoiMesh({ values, palette }: VoronoiMeshProps) {
   const { size } = useThree()
 
   const material = useMemo(() => {
-    const uniforms: Record<string, { value: any }> = {
+    const uniforms: Record<string, { value: unknown }> = {
       u_time: { value: 0 },
       u_resolution: { value: new THREE.Vector2(size.width, size.height) },
       u_audio: { value: new THREE.Vector4(0, 0, 0, 0) },
@@ -53,7 +53,7 @@ function VoronoiMesh({ controls }: { controls: VoronoiControls }) {
     return new THREE.ShaderMaterial({
       vertexShader: fullscreenVertex,
       fragmentShader: voronoi.fragment!,
-      uniforms,
+      uniforms: uniforms as Record<string, THREE.IUniform>,
       depthTest: false,
       depthWrite: false,
     })
@@ -65,13 +65,17 @@ function VoronoiMesh({ controls }: { controls: VoronoiControls }) {
   useFrame((state) => {
     material.uniforms.u_time.value = state.clock.getElapsedTime()
     ;(material.uniforms.u_resolution.value as THREE.Vector2).set(size.width, size.height)
-    material.uniforms.u_density.value = controls.density
-    material.uniforms.u_motion.value = controls.motion
-    material.uniforms.u_hueDrift.value = controls.hueDrift
-    material.uniforms.u_edgeIntensity.value = controls.edge
-    ;(material.uniforms.u_colorA.value as THREE.Vector3).fromArray(controls.colorA)
-    ;(material.uniforms.u_colorB.value as THREE.Vector3).fromArray(controls.colorB)
-    ;(material.uniforms.u_edgeColor.value as THREE.Vector3).fromArray(controls.edgeColor)
+    // Apply slider values to uniforms — only those that exist.
+    for (const [key, value] of Object.entries(values)) {
+      const slot = material.uniforms[key]
+      if (slot) slot.value = value as number
+    }
+    const colorA = hexToRgb01(palette.a)
+    const colorB = hexToRgb01(palette.b)
+    const colorEdge = hexToRgb01(palette.edge)
+    ;(material.uniforms.u_colorA.value as THREE.Vector3).fromArray(colorA)
+    ;(material.uniforms.u_colorB.value as THREE.Vector3).fromArray(colorB)
+    ;(material.uniforms.u_edgeColor.value as THREE.Vector3).fromArray(colorEdge)
     // Audio fijo en cero — sin micrófono en el preview público.
     ;(material.uniforms.u_audio.value as THREE.Vector4).set(0, 0, 0, 0)
   })
@@ -84,7 +88,12 @@ function VoronoiMesh({ controls }: { controls: VoronoiControls }) {
   )
 }
 
-export function VoronoiPreview({ controls, className }: VoronoiPreviewProps) {
+/**
+ * Wrapper standalone con su propio Canvas. Mantenido por si alguien
+ * lo usa fuera del DemoCanvas unificado, pero `sf01-client.tsx` ya
+ * no lo usa.
+ */
+export function VoronoiPreview({ values, palette, className }: VoronoiMeshProps & { className?: string }) {
   return (
     <div className={className} style={{ position: 'relative', width: '100%', height: '100%' }}>
       <Canvas
@@ -94,7 +103,7 @@ export function VoronoiPreview({ controls, className }: VoronoiPreviewProps) {
         orthographic
         camera={{ position: [0, 0, 1], near: 0, far: 2 }}
       >
-        <VoronoiMesh controls={controls} />
+        <VoronoiMesh values={values} palette={palette} />
       </Canvas>
     </div>
   )

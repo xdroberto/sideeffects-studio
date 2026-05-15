@@ -60,6 +60,31 @@ iframe:focus-visible,
   outline: none;
 }
 
+/* ─── Accesibilidad: reduced-motion global cover ─────────────────────
+   Tailwind no respeta `prefers-reduced-motion` por default en sus
+   `animate-*` utilities. Las pulses ambientales (status dots, loading
+   skeletons, decoración) generan distress en usuarios con migraine /
+   vestibular sensitivity. Quitamos la animación pero NO el elemento
+   (siguen visibles, simplemente estáticos). También freezamos el orb
+   del playground (`orb-pulse` definido inline en drag-obstacle.tsx) y
+   los efectos chromatic-shift / subtitle-glow del hero.
+   ─────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping,
+  .chromatic-title,
+  .subtitle-glow-only,
+  .fader-glow {
+    animation: none !important;
+  }
+  /* Orb del playground: la keyframe se llama `orb-pulse` y vive inline. */
+  [style*='orb-pulse'] {
+    animation: none !important;
+  }
+}
+
 @keyframes fader-glow {
   0% {
     box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);

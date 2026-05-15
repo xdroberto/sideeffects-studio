@@ -60,19 +60,17 @@ export function ScrambleText({
   className,
 }: ScrambleTextProps) {
   const spanRef = useRef<HTMLSpanElement>(null)
-  const ranKey = useRef<string>('')
 
   useEffect(() => {
     const el = spanRef.current
     if (!el) return
 
-    // Guardia de "ya animado" basado en el texto: re-renders del padre
-    // no relanzan la animación, pero un cambio real de `text` sí.
-    if (ranKey.current === text) {
-      el.textContent = text
-      return
-    }
-    ranKey.current = text
+    // Nota: NO usamos un "ya animado" guard basado en ref. React 18
+    // Strict Mode dispara el effect dos veces en dev (mount → cleanup
+    // → mount, sobre la misma instancia); un ranKey ref persiste entre
+    // las dos pasadas y mata la segunda animación, dejando el texto
+    // final sin scramble. Las deps del useEffect ya manejan re-runs
+    // cuando `text` cambia (la única razón legítima para re-animar).
 
     if (typeof window === 'undefined') return
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches

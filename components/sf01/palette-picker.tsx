@@ -70,11 +70,11 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
       {/* Preset palettes — bold visual cards, 2 columns */}
       <div className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">
+          <p className="text-[10px] uppercase tracking-[0.22em] text-ink-subtle">
             Palette
           </p>
           {activeId && (
-            <p className="text-[10px] uppercase tracking-[0.18em] text-red-500/80">
+            <p className="text-caption-mono-sm uppercase text-signal/80">
               {PRESET_PALETTES.find(p => p.id === activeId)?.name}
             </p>
           )}
@@ -91,8 +91,8 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
                 aria-label={`Palette ${p.name}`}
                 className={`group relative overflow-hidden rounded-md border transition-all duration-200 ${
                   isActive
-                    ? 'border-red-500/80 ring-1 ring-red-500/30'
-                    : 'border-neutral-800 hover:border-neutral-500'
+                    ? 'border-signal/80 ring-1 ring-signal/30'
+                    : 'border-line-strong hover:border-neutral-500'
                 }`}
               >
                 {/* Big stacked swatches — 3 vertical bars, full card width */}
@@ -104,8 +104,8 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
                 <span
                   className={`block px-2 py-1.5 text-[10px] uppercase tracking-[0.16em] text-left transition-colors ${
                     isActive
-                      ? 'bg-red-500/[0.08] text-red-300'
-                      : 'bg-black/40 text-gray-400 group-hover:text-white'
+                      ? 'bg-signal/[0.08] text-red-300'
+                      : 'bg-black/40 text-ink-muted group-hover:text-white'
                   }`}
                 >
                   {p.name}
@@ -117,8 +117,8 @@ export function PalettePicker({ value, onChange, fontClassName = '' }: PalettePi
       </div>
 
       {/* Fine-tune per channel */}
-      <div className="space-y-2 pt-2 border-t border-neutral-900">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">
+      <div className="space-y-2 pt-2 border-t border-line">
+        <p className="text-[10px] uppercase tracking-[0.22em] text-ink-subtle">
           Tweak
         </p>
         <div className="space-y-2">
@@ -175,9 +175,9 @@ function ChannelRow({ label, sublabel, value, onChange }: ChannelRowProps) {
   return (
     <div ref={ref} className="relative">
       <div className="flex items-center gap-2">
-        <span className="w-12 text-[10px] uppercase tracking-[0.16em] text-gray-500 shrink-0 flex flex-col leading-tight">
-          <span className="text-gray-400">{label}</span>
-          <span className="text-[8px] tracking-[0.2em] text-gray-600">{sublabel}</span>
+        <span className="w-12 text-[10px] uppercase tracking-[0.16em] text-ink-subtle shrink-0 flex flex-col leading-tight">
+          <span className="text-ink-muted">{label}</span>
+          <span className="text-[8px] tracking-[0.2em] text-ink-faint">{sublabel}</span>
         </span>
         <button
           type="button"
@@ -186,15 +186,15 @@ function ChannelRow({ label, sublabel, value, onChange }: ChannelRowProps) {
           aria-expanded={open}
           className={`flex-1 flex items-center gap-2 h-8 px-2 rounded-md border transition-colors ${
             open
-              ? 'border-red-500/70 bg-red-500/[0.06]'
-              : 'border-neutral-800 hover:border-neutral-600'
+              ? 'border-signal/70 bg-signal/[0.06]'
+              : 'border-line-strong hover:border-neutral-600'
           }`}
         >
           <span
             className="block w-5 h-5 rounded-sm border border-black/40 shrink-0"
             style={{ backgroundColor: value }}
           />
-          <span className="text-[11px] tabular-nums text-gray-300 uppercase truncate">
+          <span className="text-caption-mono tabular-nums text-gray-300 uppercase truncate">
             {value}
           </span>
         </button>
@@ -202,7 +202,7 @@ function ChannelRow({ label, sublabel, value, onChange }: ChannelRowProps) {
 
       {open && (
         <div
-          className="absolute z-30 right-0 mt-2 p-2 rounded-md border border-neutral-700 bg-neutral-950 shadow-2xl"
+          className="absolute z-30 right-0 mt-2 p-2 rounded-md border border-neutral-700 bg-canvas-muted shadow-2xl"
           style={{ minWidth: '210px' }}
         >
           <div className="grid grid-cols-6 gap-1">
@@ -228,7 +228,7 @@ function ChannelRow({ label, sublabel, value, onChange }: ChannelRowProps) {
             })}
           </div>
           {/* Hex input */}
-          <div className="mt-2 pt-2 border-t border-neutral-800">
+          <div className="mt-2 pt-2 border-t border-line-strong">
             <HexInput value={value} onChange={onChange} />
           </div>
         </div>
@@ -254,7 +254,7 @@ function HexInput({ value, onChange }: HexInputProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[9px] uppercase tracking-[0.18em] text-gray-500">
+      <span className="text-[9px] uppercase tracking-[0.18em] text-ink-subtle">
         Hex
       </span>
       <input
@@ -271,7 +271,7 @@ function HexInput({ value, onChange }: HexInputProps) {
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"
-        className="flex-1 h-7 px-2 rounded bg-black border border-neutral-800 text-[11px] tabular-nums uppercase text-gray-200 focus:outline-none focus:border-red-500/70"
+        className="flex-1 h-7 px-2 rounded bg-canvas border border-line-strong text-caption-mono tabular-nums uppercase text-gray-200 focus:outline-none focus:border-signal/70"
       />
     </div>
   )

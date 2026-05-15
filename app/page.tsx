@@ -40,8 +40,8 @@ const spaceMono = Space_Mono({
 
 export default function Home() {
   return (
-    <main id="main-content" className="relative min-h-screen bg-black text-white overflow-hidden">
-      <Suspense fallback={<div className="fixed inset-0 z-0 bg-black" />}>
+    <main id="main-content" className="relative min-h-screen bg-canvas text-white overflow-hidden">
+      <Suspense fallback={<div className="fixed inset-0 z-0 bg-canvas" />}>
         <DiamondScene />
       </Suspense>
       <HashScroll />
@@ -58,7 +58,7 @@ export default function Home() {
           >
             <ScrambleText text="elevating visual experiences" />
           </p>
-          <div className="mt-auto p-6 sm:p-8 text-gray-400 text-xs sm:text-sm text-center">
+          <div className="mt-auto p-6 sm:p-8 text-ink-muted text-xs sm:text-sm text-center">
             Generative Art • Interactive Design • Visual Symphony
           </div>
         </div>
