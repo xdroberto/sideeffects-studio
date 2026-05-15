@@ -15,7 +15,7 @@ const globalMouse = { x: 0, y: 0 }
  * acompaña con un desplazamiento tenue de paralaje, dando profundidad
  * 3D sin que ninguno de los dos efectos compita.
  */
-function CameraParallax() {
+function CameraParallax({ animate }: { animate: boolean }) {
     const { camera } = useThree()
     const base = useRef({ x: 0, y: 2 })
     const smoothed = useRef({ x: 0, y: 0 })
@@ -25,6 +25,7 @@ function CameraParallax() {
     }, [camera])
 
     useFrame(() => {
+        if (!animate) return
         smoothed.current.x = THREE.MathUtils.lerp(
             smoothed.current.x,
             globalMouse.x,
@@ -43,7 +44,7 @@ function CameraParallax() {
     return null
 }
 
-function Diamond() {
+function Diamond({ animate }: { animate: boolean }) {
     const groupRef = useRef<THREE.Group>(null)
     const width = 5
     const height = 3
@@ -51,6 +52,7 @@ function Diamond() {
     const smoothMouse = useRef({ x: 0, y: 0 })
 
     useFrame(() => {
+        if (!animate) return
         if (groupRef.current) {
             // Smooth the global mouse input
             smoothMouse.current.x = THREE.MathUtils.lerp(smoothMouse.current.x, globalMouse.x, 0.05)
@@ -65,22 +67,35 @@ function Diamond() {
         }
     })
 
-    // Shared positions for Wave and Lines
-    const wavePositions = useMemo(() => new Float32Array(100 * 3), [])
+    // Shared positions for Wave and Lines. Pre-llenamos con la wave en
+    // t=0 para que el diamante se vea correcto aunque `animate=false`
+    // (modo reduce-motion: render una sola vez sin loop).
+    const wavePositions = useMemo(() => {
+        const numPoints = 100
+        const arr = new Float32Array(numPoints * 3)
+        for (let i = 0; i < numPoints; i++) {
+            const x = (i / (numPoints - 1)) * width * 2 - width
+            arr[i * 3] = x
+            arr[i * 3 + 1] = Math.sin(x) * height * 0.2
+            arr[i * 3 + 2] = 0
+        }
+        return arr
+    }, [])
 
     return (
         <group ref={groupRef}>
-            <Wave width={width} height={height} positions={wavePositions} />
-            <ConnectingLines width={width} height={height} wavePositions={wavePositions} />
+            <Wave width={width} height={height} positions={wavePositions} animate={animate} />
+            <ConnectingLines width={width} height={height} wavePositions={wavePositions} animate={animate} />
         </group>
     )
 }
 
-function Wave({ width, height, positions }: { width: number, height: number, positions: Float32Array }) {
+function Wave({ width, height, positions, animate }: { width: number, height: number, positions: Float32Array, animate: boolean }) {
     const pointsRef = useRef<THREE.Points>(null)
     const numPoints = 100 // Match shared size
 
     useFrame((state) => {
+        if (!animate) return
         if (!pointsRef.current) return
 
         const time = state.clock.getElapsedTime() * 0.2 // Reduced speed from 0.5 to 0.2
@@ -145,21 +160,46 @@ function Wave({ width, height, positions }: { width: number, height: number, pos
 }
 
 // Connecting Lines Component
-function ConnectingLines({ width, height, wavePositions }: { width: number, height: number, wavePositions: Float32Array }) {
+function ConnectingLines({ width, height, wavePositions, animate }: { width: number, height: number, wavePositions: Float32Array, animate: boolean }) {
     const linesRef = useRef<THREE.LineSegments>(null)
     const numPoints = 100 // Must match Wave numPoints
 
-    // Initial Geometry
+    // Initial Geometry — la pre-llenamos con las connecting lines del
+    // estado inicial (wave en t=0) para que el diamante se vea completo
+    // incluso si `animate=false` (no entra al useFrame loop).
     const lineGeo = useMemo(() => {
         const geo = new THREE.BufferGeometry()
         // 2 lines per wave point (up and down) => 4 vertices per wave point
         const totalVertices = numPoints * 4
         const positions = new Float32Array(totalVertices * 3)
+        // Fill con la wave initial
+        for (let i = 0; i < numPoints; i++) {
+            const waveIdx = i * 3
+            const lineIdx = i * 4 * 3
+            const x = wavePositions[waveIdx] ?? 0
+            const y = wavePositions[waveIdx + 1] ?? 0
+            const z = wavePositions[waveIdx + 2] ?? 0
+            // Up
+            positions[lineIdx] = x
+            positions[lineIdx + 1] = y
+            positions[lineIdx + 2] = z
+            positions[lineIdx + 3] = 0
+            positions[lineIdx + 4] = height
+            positions[lineIdx + 5] = 0
+            // Down
+            positions[lineIdx + 6] = x
+            positions[lineIdx + 7] = y
+            positions[lineIdx + 8] = z
+            positions[lineIdx + 9] = 0
+            positions[lineIdx + 10] = -height
+            positions[lineIdx + 11] = 0
+        }
         geo.setAttribute('position', new THREE.BufferAttribute(positions, 3))
         return geo
-    }, [])
+    }, [height, wavePositions])
 
     useFrame(() => {
+        if (!animate) return
         if (!linesRef.current || !wavePositions) return
 
         const positions = linesRef.current.geometry.attributes.position.array as Float32Array
@@ -207,7 +247,7 @@ function ConnectingLines({ width, height, wavePositions }: { width: number, heig
     )
 }
 
-function TwinklingStars({ count = 1000 }: { count?: number }) {
+function TwinklingStars({ count = 1000, animate }: { count?: number, animate: boolean }) {
     const meshRef = useRef<THREE.Points>(null)
 
     const { positions, speeds, phases, baseSizes } = useMemo(() => {
@@ -234,6 +274,7 @@ function TwinklingStars({ count = 1000 }: { count?: number }) {
     const sizeBuffer = useMemo(() => new Float32Array(baseSizes), [baseSizes])
 
     useFrame((state) => {
+        if (!animate) return
         if (!meshRef.current) return
         const time = state.clock.getElapsedTime()
         const sizeAttr = meshRef.current.geometry.attributes.size as THREE.BufferAttribute
@@ -267,7 +308,7 @@ function TwinklingStars({ count = 1000 }: { count?: number }) {
 // buffer pre-alocado para evitar dispose+new en cada frame.
 const SHOOTING_STAR_TRAIL_LEN = 12
 
-function ShootingStars() {
+function ShootingStars({ animate }: { animate: boolean }) {
     const maxStars = 5
     const meshRef = useRef<THREE.Group>(null)
 
@@ -310,6 +351,7 @@ function ShootingStars() {
     }, [lineGeometries])
 
     useFrame((state, delta) => {
+        if (!animate) return
         if (!meshRef.current) return
 
         stars.forEach((star) => {
@@ -432,50 +474,30 @@ export function DiamondScene() {
         return () => window.removeEventListener('mousemove', handleMouseMove)
     }, [reduceMotion])
 
-    if (reduceMotion) {
-        // Static fallback: mantiene el "campo rojo center-out" del hero
-        // sin canvas animado. Diamante simbólico en SVG outline para
-        // recordar la forma sin movimiento perpetuo.
-        return (
-            <div className="fixed inset-0 z-0 bg-black overflow-hidden" aria-hidden>
-                <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                        background:
-                            'radial-gradient(circle at center, rgba(255,0,0,0.08) 0%, transparent 60%)',
-                    }}
-                />
-                <svg
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30"
-                    width="320"
-                    height="240"
-                    viewBox="-5 -3 10 6"
-                    fill="none"
-                    stroke="rgba(255,0,0,0.5)"
-                    strokeWidth="0.04"
-                    strokeLinejoin="round"
-                >
-                    {/* Diamante schematic — wave-line dentro de un rombo abierto */}
-                    <path d="M -5 0 L 0 3 L 5 0 L 0 -3 Z" />
-                    <path d="M -5 0 Q -2.5 1.2 0 0 T 5 0" />
-                </svg>
-            </div>
-        )
-    }
+    // Antes había un SVG fallback aquí para reduce-motion, pero ese
+    // fallback se veía MUY apagado en mobile real (Safari iOS activa
+    // reduce-motion en Low Power Mode o cuando el user lo activa en
+    // Accessibility settings) — Roberto reportó "ni se ve completo ni
+    // se mueve". Solución: render el canvas siempre (con el diamante
+    // pre-poblado en t=0 estable, las connecting lines correctas) pero
+    // pasamos `animate={!reduceMotion}` para que ningún useFrame
+    // modifique el escena en modo motion-reduced. El usuario ve el
+    // diamante completo y respetamos su preferencia.
+    const animate = !reduceMotion
 
     return (
         <div className="fixed inset-0 z-0 bg-black">
             <Canvas camera={{ position: [0, 2, 12], fov: 45 }} gl={{ antialias: true, alpha: false, stencil: false, depth: true }}>
                 <color attach="background" args={['black']} />
-                <CameraParallax />
-                <Diamond />
+                <CameraParallax animate={animate} />
+                <Diamond animate={animate} />
 
                 {/* Background Atmosphere — opacity/size up para que se
                     vean en pantallas retina-mobile donde los emisores
                     pequeños desaparecen visualmente. */}
-                <TwinklingStars count={1000} />
-                <ShootingStars />
-                <Sparkles count={80} scale={10} size={2.5} speed={0.4} opacity={0.45} color="#ff3333" />
+                <TwinklingStars count={1000} animate={animate} />
+                <ShootingStars animate={animate} />
+                <Sparkles count={80} scale={10} size={2.5} speed={animate ? 0.4 : 0} opacity={0.45} color="#ff3333" />
 
                 {/* Subtle ambient glow via emissive lighting */}
                 <ambientLight intensity={0.5} />

@@ -19,7 +19,7 @@ function CCIcon({ className = "" }: { className?: string }) {
 
 export function Footer() {
   return (
-    <footer className="relative bg-canvas text-white pt-24 sm:pt-32 pb-8 px-4 overflow-hidden">
+    <footer className="relative bg-canvas text-white pt-12 sm:pt-32 pb-6 sm:pb-8 px-4 overflow-hidden">
       {/* ASCII backdrop sutil — sustituye la imagen Unsplash por un campo
           generativo blanco de baja densidad y baja opacidad. Pointer-events
           none → no captura clicks. */}
@@ -36,7 +36,7 @@ export function Footer() {
         />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+      <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8">
         <div className="space-y-4">
           <h3 className="text-xl font-light tracking-wider">CONNECT</h3>
           <div className="space-y-2 text-ink-muted">
@@ -103,7 +103,7 @@ export function Footer() {
       </div>
 
       {/* Trust Badges */}
-      <div className="relative z-10 max-w-6xl mx-auto mt-16 flex justify-center">
+      <div className="relative z-10 max-w-6xl mx-auto mt-10 sm:mt-16 flex justify-center">
         <div className="flex items-center gap-8 text-ink-subtle">
           <a
             href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
@@ -132,7 +132,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto mt-8 pt-8 border-t border-gray-800">
+      <div className="relative z-10 max-w-6xl mx-auto mt-6 pt-6 sm:mt-8 sm:pt-8 border-t border-gray-800">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-ink-muted">
           <div className="flex gap-6">
             <Link href="/terms" className="hover:text-signal transition-colors duration-200 ease-out">Terms</Link>

@@ -6,6 +6,17 @@ html {
   /* Anchor scroll suave para los links #gallery y #about del Nav,
      desde cualquier página. */
   scroll-behavior: smooth;
+  /* iOS Safari: evitar el rubber-band overscroll que revela el body
+     negro debajo del contenido y hace que el final de la página se
+     sienta "incompleto". `contain` permite scroll normal pero corta
+     el bounce. */
+  overscroll-behavior-y: contain;
+}
+
+body {
+  /* Espejo del html para que iOS aplique la regla incluso cuando el
+     elemento que reciba el scroll sea body en vez de html. */
+  overscroll-behavior-y: contain;
 }
 
 @media (prefers-reduced-motion: reduce) {
