@@ -61,11 +61,11 @@ const FEATURES = [
   },
   {
     title: 'Open-canvas mapping',
-    body: 'Output to any resolution, any aspect ratio, any number of windows. Designed to stretch across multi-projector setups.',
+    body: 'Render at any resolution, any aspect ratio.',
   },
   {
-    title: 'Patch & share',
-    body: 'Save, load, and share patches as JSON. Recall a sound-piece state in one click. Build your own preset library.',
+    title: 'Shape & map',
+    body: 'Pick a preset polygon, or define your own with clicks. The output respects the mask.',
   },
 ]
 
@@ -119,13 +119,13 @@ export function SF01Client() {
             sf-01
           </h1>
           <p className={`${spaceMono.className} text-lg sm:text-xl text-gray-300 leading-relaxed`}>
-            A live visual synthesizer for performers, designers, and image-makers
+            A live visual synthesizer for performers, designers, and artists
             who want their visuals to <span className="text-white">move with the moment</span>.
           </p>
           <p className={`${spaceMono.className} mt-4 text-sm sm:text-base text-ink-subtle leading-relaxed max-w-2xl`}>
             Mix two GLSL shader decks like a DJ. Map audio to any parameter.
             Made for music videos, club nights, gallery walls, livestreams,
-            festival stages — for anything you want to move with sound. Below:
+            reactive backdrops — anything you want to move with sound. Below:
             a tiny taste — pick a shader, push the knobs, change the palette.
           </p>
         </header>

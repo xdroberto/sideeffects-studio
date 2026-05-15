@@ -90,13 +90,25 @@ export function Footer() {
         <div className="space-y-4">
           <h3 className="text-xl font-light tracking-wider">AVAILABILITY</h3>
           <div className="space-y-2 text-ink-muted">
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span>Commissions</span>
-              <span>Open</span>
+              <span className="flex items-center gap-2 text-emerald-400">
+                <span
+                  aria-hidden
+                  className="block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                />
+                Open
+              </span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <span>Collaborations</span>
-              <span>Open</span>
+              <span className="flex items-center gap-2 text-emerald-400">
+                <span
+                  aria-hidden
+                  className="block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                />
+                Open
+              </span>
             </div>
           </div>
         </div>
