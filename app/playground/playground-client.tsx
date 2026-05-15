@@ -82,8 +82,32 @@ function useResponsiveHeadingSize() {
   return size
 }
 
+/**
+ * Radio del orb-obstáculo: en mobile 84px de radio (168px diámetro)
+ * ocupa ~47% del viewport útil — deja líneas de texto a su izquierda
+ * tan estrechas (~70px) que cada línea tiene 3-4 palabras y se ven
+ * ríos verticales feos. Lo bajamos a 56 en mobile (diámetro 112, ~31%
+ * del ancho), 72 en sm+, y 84 desde lg+ donde sí hay espacio.
+ */
+function useResponsiveObstacleRadius() {
+  const [radius, setRadius] = useState(72)
+  useEffect(() => {
+    const apply = () => {
+      const w = window.innerWidth
+      if (w >= 1024) setRadius(84)
+      else if (w >= 640) setRadius(72)
+      else setRadius(56)
+    }
+    apply()
+    window.addEventListener('resize', apply)
+    return () => window.removeEventListener('resize', apply)
+  }, [])
+  return radius
+}
+
 export function PlaygroundClient() {
   const headingSize = useResponsiveHeadingSize()
+  const obstacleRadius = useResponsiveObstacleRadius()
 
   return (
     <main id="main-content" className="relative min-h-screen bg-canvas text-white">
@@ -138,7 +162,7 @@ export function PlaygroundClient() {
               },
             ]}
             paragraphGap={36}
-            obstacleRadius={84}
+            obstacleRadius={obstacleRadius}
             obstacleColor="#dc2626"
             obstacleRingColor="#ffffff"
             className={spaceMono.className}

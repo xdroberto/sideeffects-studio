@@ -137,7 +137,11 @@ export function SF01Client() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 lg:items-stretch">
             {/* Canvas */}
             <div className="lg:col-span-2">
-              <div className="relative w-full aspect-[16/10] max-h-[60vh] md:max-h-none rounded-[20px] overflow-hidden border border-line-strong bg-canvas-muted">
+              {/* Mobile: aspect-[4/3] da ~290px alto en 390px width, RD
+                  se aprecia mejor y deja espacio para inyectar seeds.
+                  sm+: aspect-[16/10] mantiene la proporción cinematic
+                  con mejor balance entre canvas y sliders sticky. */}
+              <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] max-h-[60vh] md:max-h-none rounded-[20px] overflow-hidden border border-line-strong bg-canvas-muted">
                 <ClientOnly>
                   <DemoCanvas
                     shaderId={shaderId}

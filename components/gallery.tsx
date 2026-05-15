@@ -288,7 +288,7 @@ export function Gallery() {
   return (
     <div className="w-full bg-canvas" ref={containerRef}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-[140px] sm:auto-rows-[180px]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-[180px] sm:auto-rows-[180px] grid-flow-dense">
           {galleryItems.map((artwork, index) => {
             const isVideo = artwork.mediaType !== 'image'
             const errored = imageErrors.has(artwork.id)
@@ -311,15 +311,17 @@ export function Gallery() {
 
             // Tile sizing por aspectRatio:
             // - featured: 2x2 (override más fuerte)
-            // - portrait / square: row-span-2 (tile más alto, encaja
-            //   imágenes cuadradas/verticales sin que object-cover
-            //   recorte la cabeza o los pies del sujeto)
-            // - landscape (default): 1x1 (las imágenes wide caben bien
-            //   en el ratio standard del grid)
+            // - portrait / square: row-span-2 SOLO desde sm: en mobile
+            //   el grid es solo 2 cols y mezclar row-spans crea huecos
+            //   feos. En mobile dejamos todos los items a 1x1 (excepto
+            //   featured) y el `grid-flow-dense` del contenedor rellena
+            //   sin reordenar visualmente. En sm+ ya hay 4 cols y la
+            //   verticalidad de portrait/square se siente intencional.
+            // - landscape (default): 1x1 (las imágenes wide caben bien)
             const tileSizeClass = artwork.featured
               ? 'col-span-2 row-span-2'
               : artwork.aspectRatio === 'portrait' || artwork.aspectRatio === 'square'
-                ? 'row-span-2'
+                ? 'sm:row-span-2'
                 : ''
 
             return (

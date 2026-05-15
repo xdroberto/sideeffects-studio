@@ -50,7 +50,7 @@ export default function Home() {
           <Nav />
         </ClientOnly>
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-5rem)] px-4">
-          <h1 className={`text-[clamp(1.75rem,9vw,3.75rem)] sm:text-5xl md:text-6xl font-light tracking-normal sm:tracking-wider mt-auto text-center break-words max-w-full chromatic-title ${microgramma.className}`}>
+          <h1 className={`text-[clamp(1.5rem,7.5vw,3.75rem)] sm:text-5xl md:text-6xl font-light tracking-normal sm:tracking-wider mt-auto text-center max-w-full chromatic-title whitespace-nowrap ${microgramma.className}`}>
             side_effects.art
           </h1>
           <p

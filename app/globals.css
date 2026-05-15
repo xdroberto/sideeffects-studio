@@ -144,7 +144,18 @@ iframe:focus-visible,
 .chromatic-title {
     animation: chromatic-shift 8s ease-in-out infinite;
     color: white;
-    letter-spacing: 0.15em;
+    /* Tracking en mobile = 0: la fuente Michroma ya es de glifos
+       anchos (~0.72em por char). Con 16 chars de `side_effects.art`,
+       cualquier letter-spacing > 0 desborda en viewports <640px y
+       parte la palabra en mitad. Desde sm+ recuperamos el 0.15em
+       dramático que define el hero. */
+    letter-spacing: 0;
+}
+
+@media (min-width: 640px) {
+    .chromatic-title {
+        letter-spacing: 0.15em;
+    }
 }
 
 @keyframes subtitle-glow {
