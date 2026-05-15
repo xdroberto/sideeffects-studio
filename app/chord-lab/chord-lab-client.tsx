@@ -57,9 +57,9 @@ export function ChordLabClient() {
     <main id="main-content" className="relative min-h-screen bg-canvas text-white">
       <Nav />
 
-      <article className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+      <article className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-16 md:pt-20 md:pb-32">
         {/* Hero */}
-        <header className="mb-10 md:mb-14 max-w-2xl">
+        <header className="mb-8 md:mb-14 max-w-2xl">
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-2 h-2 rounded-full bg-signal animate-pulse" />
             <p className={`text-caption-mono uppercase text-signal ${spaceMono.className}`}>
@@ -79,14 +79,14 @@ export function ChordLabClient() {
         </header>
 
         {/* The toy itself */}
-        <section className="mb-16">
+        <section className="mb-10 md:mb-16">
           <ClientOnly>
             <ToyChassis />
           </ClientOnly>
         </section>
 
         {/* Features list */}
-        <section className="mb-16 border-t border-line pt-10">
+        <section className="mb-10 md:mb-16 border-t border-line pt-8 md:pt-10">
           <p className={`text-caption-mono uppercase text-signal ${spaceMono.className} mb-6`}>
             Will ship with
           </p>
@@ -103,7 +103,7 @@ export function ChordLabClient() {
         </section>
 
         {/* Status */}
-        <section className="border-t border-line pt-10">
+        <section className="border-t border-line pt-8 md:pt-10">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
             <div className="space-y-2">
               <p className={`text-caption-mono-sm uppercase text-signal ${spaceMono.className}`}>
@@ -228,8 +228,12 @@ function ToyChassis() {
           <Knob label="vol" automation />
         </div>
 
-        {/* 8-pad grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        {/* 8-pad grid: 4 columnas siempre. En mobile 'grid-cols-2'
+            generaba 4 filas de pads aspect-square gigantes (~173px
+            c/u) que estiraban la página a >1200px solo en el chassis.
+            Con grid-cols-4 quedan 2 filas, el mockup respira y la
+            página es ~700px más corta. */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4">
           {['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°', 'I'].map((label, i) => (
             <Pad key={i} label={label} index={i} />
           ))}
@@ -330,9 +334,9 @@ function Pad({ label, index }: { label: string; index: number }) {
     <button
       type="button"
       disabled
-      className="aspect-square min-h-[64px] min-w-[64px] rounded-xl bg-gradient-to-b from-zinc-900 to-black border border-signal/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),inset_0_-2px_4px_rgba(0,0,0,0.6),0_0_10px_rgba(239,68,68,0.12)] flex flex-col items-center justify-center cursor-not-allowed select-none"
+      className="aspect-square min-h-[56px] min-w-[56px] rounded-xl bg-gradient-to-b from-zinc-900 to-black border border-signal/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),inset_0_-2px_4px_rgba(0,0,0,0.6),0_0_10px_rgba(239,68,68,0.12)] flex flex-col items-center justify-center cursor-not-allowed select-none"
     >
-      <span className={`text-lg sm:text-xl text-white/90 ${spaceMono.className}`}>
+      <span className={`text-base sm:text-xl text-white/90 ${spaceMono.className}`}>
         {label}
       </span>
       <span className={`text-[8px] uppercase tracking-[0.2em] text-signal/60 ${spaceMono.className}`}>
