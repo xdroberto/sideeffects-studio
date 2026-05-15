@@ -69,9 +69,9 @@ export const metadata: Metadata = {
       'Generative audio-visual art and tools by Roberto Becerril.',
     images: [
       {
-        url: '/uploads/915f5450-fce4-4ac3-9946-d8695a9cfa2e.png',
-        width: 1200,
-        height: 630,
+        url: '/uploads/branching-diffusion-poster.jpg',
+        width: 1280,
+        height: 720,
         alt: 'side_effects.art — generative work',
       },
     ],
@@ -81,7 +81,7 @@ export const metadata: Metadata = {
     title: 'side_effects.art',
     description:
       'Generative audio-visual art and tools by Roberto Becerril.',
-    images: ['/uploads/915f5450-fce4-4ac3-9946-d8695a9cfa2e.png'],
+    images: ['/uploads/branching-diffusion-poster.jpg'],
   },
   robots: {
     index: true,
