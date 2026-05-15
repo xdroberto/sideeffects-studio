@@ -127,14 +127,18 @@ function Wave({ width, height, positions }: { width: number, height: number, pos
                     args={[positions, 3]}
                 />
             </bufferGeometry>
+            {/* size 0.2 + opacity 1: en Safari iOS retina (dpr=3) los
+                puntos de 0.15 a opacity 0.8 son casi invisibles. Subimos
+                para compensar la falta de control granular sobre el
+                rendering en WebKit. */}
             <pointsMaterial
                 map={texture}
-                size={0.15}
+                size={0.2}
                 sizeAttenuation={true}
                 color="red"
                 transparent
-                alphaTest={0.5}
-                opacity={0.8}
+                alphaTest={0.4}
+                opacity={1}
             />
         </points>
     )
@@ -191,7 +195,14 @@ function ConnectingLines({ width, height, wavePositions }: { width: number, heig
 
     return (
         <lineSegments ref={linesRef} geometry={lineGeo}>
-            <lineBasicMaterial color="red" transparent opacity={0.6} linewidth={2} />
+            {/* `linewidth` no es honored por la mayoría de navegadores en
+                WebGL (Safari iOS / Chrome desktop siempre render a 1px).
+                Para compensar la línea de 1px sobre fondo negro en retina
+                iPhones, subimos opacity a 0.95 y usamos un rojo más
+                saturado — el resultado: líneas finas pero claramente
+                visibles. La alternativa correcta (TubeGeometry o Line2 de
+                three-stdlib) costaría re-escribir esta escena. */}
+            <lineBasicMaterial color="#ff2222" transparent opacity={0.95} linewidth={2} />
         </lineSegments>
     )
 }
@@ -459,10 +470,12 @@ export function DiamondScene() {
                 <CameraParallax />
                 <Diamond />
 
-                {/* Background Atmosphere */}
+                {/* Background Atmosphere — opacity/size up para que se
+                    vean en pantallas retina-mobile donde los emisores
+                    pequeños desaparecen visualmente. */}
                 <TwinklingStars count={1000} />
                 <ShootingStars />
-                <Sparkles count={50} scale={10} size={2} speed={0.4} opacity={0.2} color="#ff0000" />
+                <Sparkles count={80} scale={10} size={2.5} speed={0.4} opacity={0.45} color="#ff3333" />
 
                 {/* Subtle ambient glow via emissive lighting */}
                 <ambientLight intensity={0.5} />
