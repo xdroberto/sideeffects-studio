@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     template: '%s · side_effects.art',
   },
   description:
-    'Generative audio-visual art and tools by Roberto Becerril. Live shader synth, chord exploration toy, pretext reflow demos.',
+    'Generative audio-visual art and tools by Roberto Becerril. Live shader synth, chord exploration toy, Pretext reflow demos.',
   applicationName: 'side_effects.art',
   authors: [{ name: 'Roberto Becerril', url: 'https://robertobh.dev' }],
   creator: 'Roberto Becerril',

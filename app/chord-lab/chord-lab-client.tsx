@@ -63,7 +63,7 @@ export function ChordLabClient() {
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-2 h-2 rounded-full bg-signal animate-pulse" />
             <p className={`text-caption-mono uppercase text-signal ${spaceMono.className}`}>
-              Chord Lab · Coming Q3 2026
+              Chord Lab · Coming late 2026
             </p>
           </div>
           <h1
@@ -109,7 +109,7 @@ export function ChordLabClient() {
               <p className={`text-caption-mono-sm uppercase text-signal ${spaceMono.className}`}>
                 Status
               </p>
-              <p className="text-base text-white">UI prototype · Q3 2026</p>
+              <p className="text-base text-white">UI prototype · late 2026</p>
               <p className="text-sm text-ink-subtle">
                 Audio engine wired internally. Public UI in progress. Will ship as
                 a standalone web app and an embeddable widget.
@@ -249,7 +249,7 @@ function ToyChassis() {
       </div>
 
       <p className={`mt-4 text-center text-caption-mono-sm uppercase text-ink-subtle ${spaceMono.className}`}>
-        mockup · controls are decorative · v1 ships Q3 2026
+        mockup · controls are decorative · v1 ships late 2026
       </p>
 
       {/* Keyframes locales para las micro-animaciones del chassis.

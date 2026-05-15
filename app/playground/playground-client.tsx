@@ -37,7 +37,7 @@ const ReflowCanvas = nextDynamic(
 )
 
 const LEAD =
-  'Drag the red orb. As you move it, the paragraph below rearranges itself around the obstacle in real time, using @chenglou/pretext to recompute the line breaks every frame.'
+  'Drag the red orb. As you move it, the paragraph below rearranges itself around the obstacle in real time, using the Pretext library by Cheng Lou to recompute the line breaks every frame.'
 
 // Fragmento (reconstruido) de Ward Farnsworth, *The Socratic Method*
 // (Godine, 2021). El texto encaja con la metáfora visual: el obstáculo
@@ -183,7 +183,7 @@ export function PlaygroundClient() {
               How it works
             </p>
             <ShrinkwrapText
-              text="Pretext prepares the text once. For each line we compute the horizontal segments not occluded by the orb's circular cross-section, then call layoutNextLineRange per segment. Re-layout runs at 60fps."
+              text="Pretext prepares the text once. For each line we compute the horizontal segments not occluded by the orb's circular cross-section, then re-layout each segment independently. The whole pass runs every frame at 60fps."
               fontSize={14}
               targetLines={5}
               maxWidth={420}
@@ -195,7 +195,7 @@ export function PlaygroundClient() {
               Mobile
             </p>
             <ShrinkwrapText
-              text="The orb has touch-action: none. The rest of the page scrolls naturally — touchmove only preventDefaults while a drag is active."
+              text="The orb captures touch directly. The rest of the page scrolls naturally — touches are only intercepted while a drag is active."
               fontSize={14}
               targetLines={4}
               maxWidth={420}

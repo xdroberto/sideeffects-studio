@@ -50,7 +50,7 @@ export function LicensingClient() {
         </section>
 
         <section>
-          <h2 className="text-display-sm text-white mb-3">Commissioning &amp; Collaboration</h2>
+          <h2 className="text-display-sm text-white mb-3">Commissioning & Collaboration</h2>
           <p>
             Custom pieces, installations, and collaborative works are available for licensing.
             Terms are negotiated on a per-project basis. Licensing may include but is not
@@ -77,7 +77,7 @@ export function LicensingClient() {
         <section>
           <h2 className="text-display-sm text-white mb-3">Third-Party Assets</h2>
           <p>
-            The &quot;philosopher bust&quot; icon used in the playground page is by Delapouite
+            The “philosopher bust” icon used in the playground page is by Delapouite
             via{' '}
             <a
               href="https://game-icons.net/"

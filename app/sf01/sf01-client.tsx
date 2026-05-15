@@ -110,7 +110,7 @@ export function SF01Client() {
           <div className="flex items-center gap-3 mb-5">
             <span className="block w-2 h-2 rounded-full bg-signal animate-pulse" />
             <p className={`text-caption-mono uppercase text-signal ${spaceMono.className}`}>
-              SF-01 · Coming Q3 2026
+              SF-01 · Coming late 2026
             </p>
           </div>
           <h1
@@ -264,7 +264,7 @@ export function SF01Client() {
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-signal/[0.04] blur-3xl pointer-events-none" />
             <div className="relative max-w-2xl">
               <p className={`text-caption-mono uppercase text-signal ${spaceMono.className} mb-4`}>
-                Closed beta · Spring 2026
+                Closed beta · 2026
               </p>
               <h2 className={`text-display-md mb-4 ${microgramma.className}`}>
                 want a key
@@ -292,10 +292,10 @@ export function SF01Client() {
               <p className={`text-caption-mono-sm uppercase text-signal ${spaceMono.className}`}>
                 Status
               </p>
-              <p className="text-base text-white">In active development · Q3 2026 public release</p>
+              <p className="text-base text-white">In active development · late 2026 public release</p>
               <p className="text-sm text-ink-subtle">
                 Internal builds are running on macOS, Windows and the browser.
-                Closed beta opens in spring — see above for access.
+                Closed beta opens later this year — see above for access.
               </p>
             </div>
             <div className="space-y-2">
