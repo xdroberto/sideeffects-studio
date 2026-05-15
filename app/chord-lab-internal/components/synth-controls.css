@@ -1,0 +1,60 @@
+@keyframes knightRider {
+  0% { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+  50% { color: #ff6666; text-shadow: 0 0 20px #ff6666; }
+  100% { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+}
+
+.animate-knight-rider {
+  animation: knightRider 2s infinite;
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+  .fader-handle {
+    width: 24px !important;
+    height: 6px !important;
+    left: -9px !important;
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  .fader-handle {
+    width: 24px !important;
+    height: 6px !important;
+    left: -9px !important;
+  }
+
+  /* Increase touch target size for mobile */
+  .accordion-trigger {
+    min-height: 44px;
+  }
+
+  /* Adjust spacing for mobile */
+  .accordion-content {
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+  }
+
+  /* Increase text size for better readability on mobile */
+  .text-xs {
+    font-size: 0.8rem;
+  }
+
+  .text-sm {
+    font-size: 0.9rem;
+  }
+
+  .fader-handle {
+    height: 24px !important;
+    width: 100% !important;
+    left: 0 !important;
+    border-radius: 4px !important;
+  }
+
+  /* Prevenir el desplazamiento de la página al interactuar con los faders */
+  .touch-none {
+    touch-action: none;
+  }
+}
+

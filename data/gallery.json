@@ -2,9 +2,9 @@
   "items": [
     {
       "id": "1",
-      "title": "Digital Waves",
-      "description": "Generative ocean patterns driven by noise algorithms.",
-      "imagePath": "/uploads/915f5450-fce4-4ac3-9946-d8695a9cfa2e.png",
+      "title": "Tarot Bloom",
+      "description": "Psychedelic tarot collage in CMY ink.",
+      "imagePath": "/uploads/tarot-bloom.jpg",
       "featured": true,
       "aspectRatio": "portrait",
       "sortOrder": 0,
@@ -12,23 +12,45 @@
     },
     {
       "id": "2",
-      "title": "Fractal Dimensions",
-      "description": "Recursive structures revealing infinite complexity.",
-      "imagePath": "/uploads/c9981398-aa39-45c9-9664-3e4ec3273aad.png",
+      "title": "Branching Diffusion",
+      "description": "Reaction-diffusion patterns mapped onto trees.",
+      "mediaType": "video-mp4",
+      "videoPath": "/uploads/branching-diffusion.mp4",
+      "posterPath": "/uploads/branching-diffusion-poster.jpg",
       "featured": false,
-      "aspectRatio": "square",
-      "sortOrder": 1,
-      "mediaType": "image"
+      "aspectRatio": "landscape",
+      "sortOrder": 1
     },
     {
       "id": "3",
-      "title": "Neural Patterns",
-      "description": "Visualizing the hidden layers of machine learning.",
-      "imagePath": "/uploads/3495b0c9-b0a3-4760-bef9-b7183c55f260.jpg",
+      "title": "Refracted Self",
+      "description": "Luminous figure walking across reflective water at night.",
+      "imagePath": "/uploads/refracted-self.jpg",
       "featured": false,
-      "aspectRatio": "landscape",
+      "aspectRatio": "square",
       "sortOrder": 2,
       "mediaType": "image"
+    },
+    {
+      "id": "4",
+      "title": "Be yourself",
+      "description": "",
+      "mediaType": "video-youtube",
+      "youtubeId": "HcDVfs1vZbc",
+      "featured": false,
+      "aspectRatio": "landscape",
+      "sortOrder": 3
+    },
+    {
+      "id": "5",
+      "title": "Drifting Planes",
+      "description": "Geometric planes drifting through Turing-pattern fields.",
+      "mediaType": "video-mp4",
+      "videoPath": "/uploads/webpage.mp4",
+      "posterPath": "/uploads/webpage-poster.jpg",
+      "featured": false,
+      "aspectRatio": "landscape",
+      "sortOrder": 4
     }
   ]
 }

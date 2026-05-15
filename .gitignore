@@ -39,3 +39,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code local config
+.claude/
+
+# dev server logs
+build.log
+build_error.log
+build_full.log
+
+# static export staging dir (created/used by scripts/build-static.mjs)
+.next-disabled/
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/

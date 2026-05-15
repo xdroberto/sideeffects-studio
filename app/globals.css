@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  /* Anchor scroll suave para los links #gallery y #about del Nav,
+     desde cualquier página. */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 :root {
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 0, 0, 0;
@@ -16,6 +28,61 @@ body {
       rgb(var(--background-end-rgb))
     )
     rgb(var(--background-start-rgb));
+}
+
+/* ─── Accesibilidad: focus-visible global ────────────────────────────
+   Foco visible coherente para keyboard navigation. Aplicamos sólo
+   a `<a>`, `<button>`, `<input>`, `<textarea>`, `<select>` y
+   elementos con `[tabindex]`. Quedan fuera:
+   - canvas / video / iframe → elementos visuales que no deben ganar
+     un outline rojo (la demo de SF-01, la galería, los embeds Spotify).
+   - elementos con clase `focus-visible:ring-*` ya tienen su propio
+     estilo de ring (shadcn UI). El outline coexiste con el ring,
+     pero usamos outline-offset 2px para que no choquen.
+   El outline-offset 2px da aire visual.
+   ─────────────────────────────────────────────────────────────────── */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+canvas:focus-visible,
+video:focus-visible,
+iframe:focus-visible,
+[aria-hidden='true']:focus-visible {
+  outline: none;
+}
+
+/* ─── Accesibilidad: reduced-motion global cover ─────────────────────
+   Tailwind no respeta `prefers-reduced-motion` por default en sus
+   `animate-*` utilities. Las pulses ambientales (status dots, loading
+   skeletons, decoración) generan distress en usuarios con migraine /
+   vestibular sensitivity. Quitamos la animación pero NO el elemento
+   (siguen visibles, simplemente estáticos). También freezamos el orb
+   del playground (`orb-pulse` definido inline en drag-obstacle.tsx) y
+   los efectos chromatic-shift / subtitle-glow del hero.
+   ─────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce,
+  .animate-ping,
+  .chromatic-title,
+  .subtitle-glow-only,
+  .fader-glow {
+    animation: none !important;
+  }
+  /* Orb del playground: la keyframe se llama `orb-pulse` y vive inline. */
+  [style*='orb-pulse'] {
+    animation: none !important;
+  }
 }
 
 @keyframes fader-glow {
@@ -48,5 +115,48 @@ body {
 
 .fader-input {
   @apply absolute inset-0 w-full h-full opacity-0 cursor-pointer;
+}
+
+@keyframes chromatic-shift {
+    0%, 100% {
+        text-shadow:
+            -2px 0 rgba(255, 0, 0, 0.75),
+            2px 0 rgba(0, 120, 255, 0.6),
+            0 2px rgba(0, 255, 120, 0.3),
+            0 0 10px rgba(255, 0, 0, 0.2);
+    }
+    33% {
+        text-shadow:
+            -3px 1px rgba(255, 0, 0, 0.85),
+            3px -1px rgba(0, 120, 255, 0.7),
+            1px -2px rgba(0, 255, 120, 0.35),
+            0 0 20px rgba(255, 0, 0, 0.25);
+    }
+    66% {
+        text-shadow:
+            -1px -2px rgba(255, 0, 0, 0.65),
+            2px 2px rgba(0, 120, 255, 0.55),
+            -1px 1px rgba(0, 255, 120, 0.25),
+            0 0 8px rgba(255, 0, 0, 0.15);
+    }
+}
+
+.chromatic-title {
+    animation: chromatic-shift 8s ease-in-out infinite;
+    color: white;
+    letter-spacing: 0.15em;
+}
+
+@keyframes subtitle-glow {
+    0%, 100% {
+        text-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
+    }
+    50% {
+        text-shadow: 0 0 12px rgba(255, 0, 0, 0.25), 0 0 30px rgba(255, 0, 0, 0.08);
+    }
+}
+
+.subtitle-glow-only {
+    animation: subtitle-glow 5s ease-in-out infinite;
 }
 
