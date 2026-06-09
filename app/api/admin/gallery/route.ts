@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookieAsync } from '@/lib/auth'
+import { isLocalAdminEnabled } from '@/lib/local-admin.mjs'
 import {
     getGalleryItems,
     addGalleryItem,
@@ -7,6 +8,10 @@ import {
     deleteGalleryItem,
     type GalleryItemInput,
 } from '@/lib/gallery-data'
+
+function localAdminNotFound() {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+}
 
 async function requireAuth() {
     const valid = await getSessionFromCookieAsync()
@@ -73,6 +78,8 @@ function buildInput(body: any): GalleryItemInput | { error: string } {
 
 // GET /api/admin/gallery — List all items (public for gallery display)
 export async function GET() {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     try {
         const items = getGalleryItems()
         return NextResponse.json({ items })
@@ -84,6 +91,8 @@ export async function GET() {
 
 // POST /api/admin/gallery — Add new item (auth required)
 export async function POST(request: NextRequest) {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     const authError = await requireAuth()
     if (authError) return authError
 
@@ -108,6 +117,8 @@ export async function POST(request: NextRequest) {
 
 // PUT /api/admin/gallery — Update item (auth required)
 export async function PUT(request: NextRequest) {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     const authError = await requireAuth()
     if (authError) return authError
 
@@ -156,6 +167,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE /api/admin/gallery — Delete item (auth required)
 export async function DELETE(request: NextRequest) {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     const authError = await requireAuth()
     if (authError) return authError
 
