@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSessionFromCookieAsync } from '@/lib/auth'
+import { isLocalAdminEnabled } from '@/lib/local-admin.mjs'
 import { writeFile, mkdir } from 'fs/promises'
 import path from 'path'
 import crypto from 'crypto'
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
 
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml']
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 const VIDEO_TYPES = ['video/mp4', 'video/webm']
 const ALL_TYPES = [...IMAGE_TYPES, ...VIDEO_TYPES]
 
@@ -14,6 +15,10 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024   // 5MB
 const MAX_VIDEO_SIZE = 50 * 1024 * 1024  // 50MB
 
 export async function POST(request: NextRequest) {
+    if (!isLocalAdminEnabled()) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+
     const valid = await getSessionFromCookieAsync()
     if (!valid) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

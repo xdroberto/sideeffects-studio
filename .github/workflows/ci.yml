@@ -1,0 +1,56 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Node tests
+        run: npm run test:node
+
+      - name: E2E smoke
+        run: npm test
+
+      - name: Secret audit
+        run: npm run audit:secrets
+
+      - name: Static HTTP smoke
+        run: |
+          python3 -m http.server 3000 -d out &
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          npm run smoke:http -- http://127.0.0.1:3000

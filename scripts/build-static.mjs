@@ -14,7 +14,7 @@
  *   node scripts/build-static.mjs
  */
 
-import { existsSync, mkdirSync, renameSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, renameSync } from 'node:fs'
 import { execSync } from 'node:child_process'
 import { dirname, resolve } from 'node:path'
 
@@ -34,16 +34,66 @@ function move(from, to) {
   const src = resolve(ROOT, from)
   const dst = resolve(ROOT, to)
   if (!existsSync(src)) return false
+  if (existsSync(dst)) {
+    throw new Error(`Refusing to overwrite existing path: ${to}`)
+  }
   mkdirSync(dirname(dst), { recursive: true })
   renameSync(src, dst)
   return true
 }
 
-const moved = []
-try {
-  if (!existsSync(DISABLED_DIR)) {
-    mkdirSync(DISABLED_DIR, { recursive: true })
+function hasEntries(dir) {
+  return existsSync(dir) && readdirSync(dir).length > 0
+}
+
+function restoreMoved(moved) {
+  // CRITICAL: restore in reverse order to mirror move order and avoid any
+  // collisions. We restore even on success so the working tree is clean.
+  for (const m of [...moved].reverse()) {
+    try {
+      if (existsSync(resolve(ROOT, m.to))) {
+        move(m.to, m.from)
+        console.log(`[build-static] restored ${m.from}`)
+      }
+    } catch (restoreErr) {
+      console.error(
+        `[build-static] FAILED to restore ${m.from} from ${m.to}:`,
+        restoreErr && restoreErr.message ? restoreErr.message : restoreErr,
+      )
+      process.exitCode = process.exitCode || 1
+    }
   }
+}
+
+function verifyRestored() {
+  for (const m of MOVES) {
+    if (!existsSync(resolve(ROOT, m.from))) {
+      console.error(`[build-static] restore verification failed: missing ${m.from}`)
+      process.exitCode = process.exitCode || 1
+    }
+  }
+}
+
+const moved = []
+let restoring = false
+
+function restoreAndExit(signal) {
+  if (restoring) process.exit(1)
+  restoring = true
+  console.error(`[build-static] received ${signal}; restoring moved paths...`)
+  restoreMoved(moved)
+  verifyRestored()
+  process.exit(process.exitCode || 130)
+}
+
+process.once('SIGINT', () => restoreAndExit('SIGINT'))
+process.once('SIGTERM', () => restoreAndExit('SIGTERM'))
+
+try {
+  if (hasEntries(DISABLED_DIR)) {
+    throw new Error('.next-disabled is not empty; restore or remove stale build staging files before building')
+  }
+  mkdirSync(DISABLED_DIR, { recursive: true })
 
   for (const m of MOVES) {
     if (move(m.from, m.to)) {
@@ -61,19 +111,7 @@ try {
   console.error('[build-static] build failed:', err && err.message ? err.message : err)
   process.exitCode = 1
 } finally {
-  // CRITICAL: restore in reverse order to mirror move order and avoid any
-  // collisions. We restore even on success so the working tree is clean.
-  for (const m of [...moved].reverse()) {
-    try {
-      move(m.to, m.from)
-      console.log(`[build-static] restored ${m.from}`)
-    } catch (restoreErr) {
-      console.error(
-        `[build-static] FAILED to restore ${m.from} from ${m.to}:`,
-        restoreErr && restoreErr.message ? restoreErr.message : restoreErr,
-      )
-      // Force non-zero exit so CI / caller notices something is wrong.
-      process.exitCode = process.exitCode || 1
-    }
-  }
+  restoring = true
+  restoreMoved(moved)
+  verifyRestored()
 }

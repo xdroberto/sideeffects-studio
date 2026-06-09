@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyPassword, createSession, setSessionCookie, clearSessionCookie, checkRateLimit } from '@/lib/auth'
+import { isLocalAdminEnabled } from '@/lib/local-admin.mjs'
+
+function localAdminNotFound() {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+}
 
 // POST /api/admin/auth — Login
 export async function POST(request: NextRequest) {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     try {
         const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
         const rateCheck = checkRateLimit(ip)
@@ -35,6 +42,8 @@ export async function POST(request: NextRequest) {
 
 // DELETE /api/admin/auth — Logout
 export async function DELETE() {
+    if (!isLocalAdminEnabled()) return localAdminNotFound()
+
     clearSessionCookie()
     return NextResponse.json({ success: true })
 }

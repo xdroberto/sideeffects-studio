@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "format:check": "node -e \"console.log('no formatter configured')\"",
     "validate": "npm run typecheck && npm run lint && npm run build",
+    "audit:secrets": "node scripts/audit-secrets.mjs",
+    "smoke:http": "node scripts/smoke-http.mjs",
     "test": "playwright test",
+    "test:node": "node --test tests/node/*.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { jwtVerify } from 'jose'
+import { isLocalAdminEnabled } from './lib/local-admin.mjs'
 
 function getSecret(): Uint8Array {
     const secret = process.env.ADMIN_JWT_SECRET
@@ -8,6 +9,10 @@ function getSecret(): Uint8Array {
 }
 
 export async function middleware(request: NextRequest) {
+    if (!isLocalAdminEnabled()) {
+        return NextResponse.next()
+    }
+
     // Only protect /admin/gallery (not /admin login page itself)
     if (!request.nextUrl.pathname.startsWith('/admin/gallery')) {
         return NextResponse.next()

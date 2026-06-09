@@ -33,13 +33,18 @@ async function main() {
         // Remove old entries if they exist
         envContent = envContent
             .split('\n')
-            .filter(line => !line.startsWith('ADMIN_PASSWORD_HASH=') && !line.startsWith('ADMIN_JWT_SECRET='))
+            .filter(line =>
+                !line.startsWith('ENABLE_LOCAL_ADMIN=') &&
+                !line.startsWith('ADMIN_PASSWORD_HASH=') &&
+                !line.startsWith('ADMIN_JWT_SECRET=')
+            )
             .join('\n')
             .trimEnd()
         envContent += '\n'
     }
 
     const hashB64 = Buffer.from(hash).toString('base64')
+    envContent += 'ENABLE_LOCAL_ADMIN=true\n'
     envContent += `ADMIN_PASSWORD_HASH=${hashB64}\n`
     envContent += `ADMIN_JWT_SECRET=${jwtSecret}\n`
 
