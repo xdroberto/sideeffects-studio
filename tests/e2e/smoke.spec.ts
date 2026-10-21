@@ -83,13 +83,13 @@ test.describe('Smoke — Beta access CTAs', () => {
 })
 
 test.describe('Smoke — Playground', () => {
-  test('drag orb is rendered and accessible', async ({ page }) => {
+  test('field magnet is rendered and accessible', async ({ page }) => {
     await page.goto('/playground')
 
-    // The orb is a <button> with aria-label "Drag the philosopher. The
-    // text reflows around it." This is the load-bearing interactive
-    // control of the playground page.
-    const orb = page.getByRole('button', { name: /^Drag the philosopher/i })
-    await expect(orb).toBeVisible({ timeout: 15_000 })
+    // Field's magnet is a <button> with aria-label "Magnet. Drag it, or
+    // move it with the arrow keys." It appears once the page has laid out
+    // its text; it is the load-bearing control the keyboard can reach.
+    const magnet = page.getByRole('button', { name: /^Magnet/i })
+    await expect(magnet).toBeVisible({ timeout: 15_000 })
   })
 })

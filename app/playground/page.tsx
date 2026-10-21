@@ -3,8 +3,7 @@ import { PlaygroundClient } from './playground-client'
 
 export const metadata: Metadata = {
   title: 'playground',
-  description:
-    'Drag the proposition. The argument rearranges around it in real time. A pretext reflow demo.',
+  description: "Four instruments built from the studio's materials: ink, text, strings and thread.",
 }
 
 export default function PlaygroundPage() {

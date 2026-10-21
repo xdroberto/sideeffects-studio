@@ -91,7 +91,7 @@ function toWave(camera: THREE.Camera, nx: number, ny: number, pl: Placement, cx:
 /**
  * Caja de la portada que marca la página con [data-scene-cover], en NDC.
  * La página decide dónde va (a la derecha de su encabezado en escritorio,
- * detrás del título en celular; en Playground, el orbe arrastrable), así
+ * detrás del título en celular; en Playground, el carrete del hilo), así
  * la escena acompaña al layout real en cualquier ancho y sube con el scroll.
  */
 function coverBox() {
@@ -121,13 +121,13 @@ function placementFor(kind: ShapeKind, camera: THREE.Camera, vw: number, vh: num
         return { x: 0, y: 0, s: Math.min(1, (vw * 0.8) / BOUNDS.line.w), alpha: 0.35, rot: 0.3, visible: kind !== 'line' }
     }
     const b = BOUNDS[kind]
-    // En Playground las cuerdas son un halo alrededor del orbe y lo siguen al arrastrarlo.
-    const halo = kind === 'playground'
-    const s = Math.min((vw * box.w) / b.w, (vh * box.h) / b.h) * (halo ? 1.5 : 1)
+    // En Playground las cuerdas se enrollan en el carrete del que sale el hilo rojo.
+    const spool = kind === 'playground'
+    const s = Math.min((vw * box.w) / b.w, (vh * box.h) / b.h)
     const c = ndcToPlane(camera, box.cx, box.cy)
     // En celular la portada va detrás del título: presente, pero sin competir con la lectura.
-    const alpha = halo ? (wide ? 0.45 : 0.3) : (wide ? 0.8 : 0.22)
-    return { x: c.x, y: c.y, s, alpha, rot: halo ? 0.15 : 0.5, visible: box.visible }
+    const alpha = spool ? (wide ? 0.9 : 0.75) : (wide ? 0.8 : 0.22)
+    return { x: c.x, y: c.y, s, alpha, rot: spool ? 0.15 : 0.5, visible: box.visible }
 }
 
 function makeDotTexture() {
