@@ -1,10 +1,11 @@
 'use client'
 
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
-import { useEffect, useRef, useState, useCallback } from 'react'
+import type { CSSProperties, KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import galleryData from '@/data/gallery.json'
+import { planGallery } from '@/lib/gallery-layout.mjs'
 
 // ─── Types ──────────────────────────────────────────────────────────
 // Mirror of the discriminated union in lib/gallery-data.ts. Kept inline
@@ -122,6 +123,50 @@ export function Gallery() {
   // prev/next navigation within the lightbox without recomputing position.
   const selectedArtwork = selectedIndex !== null ? galleryItems[selectedIndex] ?? null : null
   const totalItems = galleryItems.length
+
+  // Acomodo sin huecos para cualquier número de obras: bandas que llenan
+  // la cuadrícula completa (lib/gallery-layout.mjs). Uno para celular
+  // (2 columnas) y otro para md+ (4 columnas); el CSS elige cuál aplica.
+  const layout2 = useMemo(() => planGallery(galleryItems, 2).placements, [galleryItems])
+  const layout4 = useMemo(() => planGallery(galleryItems, 4).placements, [galleryItems])
+
+  // Las obras se abren en ventanas de diamante conforme entran al
+  // viewport, ligadas al scroll (en JS para que funcione igual en
+  // Firefox). Al abrir del todo, clip-path pasa a `none` y vuelven las
+  // esquinas redondeadas. Con «reducir movimiento» no hay revelado.
+  useEffect(() => {
+    const root = containerRef.current
+    if (!root) return
+    const tiles = Array.from(root.querySelectorAll<HTMLElement>('[data-reveal]'))
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      tiles.forEach((el) => { el.style.clipPath = '' })
+      return
+    }
+    let raf = 0
+    const update = () => {
+      raf = 0
+      const vh = window.innerHeight
+      const vw = Math.max(1, window.innerWidth)
+      for (const el of tiles) {
+        const r = el.getBoundingClientRect()
+        // Las de la derecha abren un poco después: se leen como una ola.
+        const p = Math.min(1, Math.max(0, (vh * 0.98 - r.top) / (vh * 0.42) - (r.left / vw) * 0.18))
+        const d = (p * 106).toFixed(2)
+        el.style.clipPath = p >= 1
+          ? 'none'
+          : `polygon(50% calc(50% - ${d}%), calc(50% + ${d}%) 50%, 50% calc(50% + ${d}%), calc(50% - ${d}%) 50%)`
+      }
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [galleryItems])
 
   // ─── YouTube hover preview state ─────────────────────────────────
   // Cuando el user hover sobre un tile video-youtube, ciclamos entre
@@ -286,9 +331,9 @@ export function Gallery() {
   }
 
   return (
-    <div className="w-full bg-canvas" ref={containerRef}>
+    <div className="w-full" ref={containerRef}>
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-[180px] sm:auto-rows-[180px] grid-flow-dense">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 auto-rows-[180px] sm:auto-rows-[180px]">
           {galleryItems.map((artwork, index) => {
             const isVideo = artwork.mediaType !== 'image'
             const errored = imageErrors.has(artwork.id)
@@ -305,29 +350,26 @@ export function Gallery() {
             const tileSrc = errored ? PLACEHOLDER_IMG : (previewSrc ?? rawThumb)
             const isRemoteThumb = tileSrc.startsWith('http')
             const variantBadge =
-              artwork.mediaType === 'video-mp4' ? 'VIDEO'
-                : artwork.mediaType === 'video-youtube' ? 'YOUTUBE'
+              artwork.mediaType === 'video-mp4' ? 'video'
+                : artwork.mediaType === 'video-youtube' ? 'youtube'
                   : null
 
-            // Tile sizing por aspectRatio:
-            // - featured: 2x2 (override más fuerte)
-            // - portrait / square: row-span-2 SOLO desde sm: en mobile
-            //   el grid es solo 2 cols y mezclar row-spans crea huecos
-            //   feos. En mobile dejamos todos los items a 1x1 (excepto
-            //   featured) y el `grid-flow-dense` del contenedor rellena
-            //   sin reordenar visualmente. En sm+ ya hay 4 cols y la
-            //   verticalidad de portrait/square se siente intencional.
-            // - landscape (default): 1x1 (las imágenes wide caben bien)
-            const tileSizeClass = artwork.featured
-              ? 'col-span-2 row-span-2'
-              : artwork.aspectRatio === 'portrait' || artwork.aspectRatio === 'square'
-                ? 'sm:row-span-2'
-                : ''
+            // Posición explícita que calculó el planificador (sin huecos).
+            const p2 = layout2[index]
+            const p4 = layout4[index]
+            const placeStyle = {
+              '--gc2': p2 ? `${p2.col} / span ${p2.w}` : 'auto',
+              '--gr2': p2 ? `${p2.row} / span ${p2.h}` : 'auto',
+              '--gc4': p4 ? `${p4.col} / span ${p4.w}` : 'auto',
+              '--gr4': p4 ? `${p4.row} / span ${p4.h}` : 'auto',
+            } as CSSProperties
 
             return (
               <MotionDiv
                 key={artwork.id}
-                className={`relative cursor-pointer bg-canvas-raised overflow-hidden rounded-[20px] group transition-shadow duration-300 ease-out hover:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] focus-visible:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] ${tileSizeClass}`}
+                data-reveal=""
+                style={placeStyle}
+                className="relative cursor-pointer bg-canvas-raised overflow-hidden rounded-[20px] group transition-shadow duration-300 ease-out hover:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] focus-visible:shadow-[0_0_0_1px_rgba(239,68,68,0.4),0_8px_30px_-12px_rgba(239,68,68,0.35)] [grid-column:var(--gc2)] [grid-row:var(--gr2)] md:[grid-column:var(--gc4)] md:[grid-row:var(--gr4)]"
                 onClick={() => openArtwork(index)}
                 onKeyDown={(e: ReactKeyboardEvent) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -373,13 +415,22 @@ export function Gallery() {
                   />
                 )}
 
-                {/* Play badge for video items — bottom-left, subtle */}
+                {/* Dato de video, sin píldora: un triángulo de play tejido
+                    con cuerdas (como el diamante) y el tipo en minúsculas.
+                    La sombra de texto lo mantiene legible sobre cualquier obra. */}
                 {variantBadge && (
-                  <div className="absolute bottom-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm rounded-full px-2.5 py-1 pointer-events-none">
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-                      <polygon points="5,3 19,12 5,21" />
+                  <div className="absolute bottom-3 left-3.5 z-10 flex items-center gap-1.5 pointer-events-none text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.95)]">
+                    <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden className="text-signal drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                      <g stroke="currentColor" strokeWidth="0.9">
+                        <line x1="1" y1="1" x2="11" y2="6" />
+                        <line x1="1" y1="3" x2="11" y2="6" />
+                        <line x1="1" y1="5" x2="11" y2="6" />
+                        <line x1="1" y1="7" x2="11" y2="6" />
+                        <line x1="1" y1="9" x2="11" y2="6" />
+                        <line x1="1" y1="11" x2="11" y2="6" />
+                      </g>
                     </svg>
-                    <span className="text-white text-[10px] tracking-[0.12em] font-mono">{variantBadge}</span>
+                    <span className="text-[11px] font-mono tracking-wide">{variantBadge}</span>
                   </div>
                 )}
 

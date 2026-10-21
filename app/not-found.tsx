@@ -19,6 +19,7 @@ import Link from 'next/link'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
+import { SignalBullet } from '@/components/signal-bullet'
 
 interface ValidPath {
   href: string
@@ -62,10 +63,7 @@ export default function NotFound() {
         <div className="relative z-10 max-w-2xl w-full text-center space-y-8">
           {/* Status caption — coherente con SF-01 / Chord Lab hero pattern */}
           <div className="flex items-center justify-center gap-3">
-            <span
-              aria-hidden
-              className="block w-2 h-2 rounded-full bg-signal animate-pulse"
-            />
+            <SignalBullet />
             <p className="text-caption-mono uppercase text-signal font-mono">
               proposition · undefined
             </p>

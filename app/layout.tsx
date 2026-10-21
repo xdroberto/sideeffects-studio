@@ -1,15 +1,18 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter, Michroma, Space_Mono } from 'next/font/google'
+import { Archivo, Michroma, Space_Mono } from 'next/font/google'
+import { SceneLayer } from '@/components/scene/scene-layer'
 
 /**
- * Font system — side_effects.art
+ * Font system — side_effects.art (tres voces, 2026-10-20)
  *
- * - Inter (var --font-sans): body text default, fallback global.
- * - Michroma (var --font-display): display font para H1/H2 heroes.
+ * - Michroma (var --font-display): títulos y la marca.
  *   Geometría extended industrial — encaja con la estética
  *   técnica/musical (sintetizadores, synth-art).
- * - Space Mono (var --font-mono): caption / readout / labels.
+ * - Archivo (var --font-sans): texto corrido, navegación y
+ *   descripciones. Sustituye a Inter, el default de los sitios hechos
+ *   con IA. Su eje de ancho (wdth) dialoga con lo extendido de Michroma.
+ * - Space Mono (var --font-mono): datos, etiquetas y readouts.
  *   Personalidad de "firmware UI" usada en SF-01 y Chord Lab.
  *
  * Cargamos las tres aquí con `variable` CSS para que cada página
@@ -17,10 +20,11 @@ import { Inter, Michroma, Space_Mono } from 'next/font/google'
  * className expuesto por `next/font` — sin re-imports por página
  * (cada import duplicado generaba una carga extra de la font).
  */
-const inter = Inter({
+const archivo = Archivo({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
+  axes: ['wdth'],
 })
 
 const michroma = Michroma({
@@ -108,9 +112,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${michroma.variable} ${spaceMono.variable}`}
+      className={`${archivo.variable} ${michroma.variable} ${spaceMono.variable}`}
     >
-      <body className={inter.className}>
+      <body className={archivo.className}>
         {/*
           Skip-link a11y — visible solo cuando recibe foco con teclado.
           Permite a usuarios de keyboard saltarse la navegación principal
@@ -127,6 +131,9 @@ export default function RootLayout({
         >
           Skip to main content
         </a>
+        {/* Escena persistente (diamante, cuerdas, tinta): vive aquí para
+            no desmontarse al navegar y poder transformarse entre páginas. */}
+        <SceneLayer />
         {children}
       </body>
     </html>

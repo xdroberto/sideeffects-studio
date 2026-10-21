@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
+import { SignalBullet } from '@/components/signal-bullet'
 import { PalettePicker, PRESET_PALETTES, type PaletteHexes } from '@/components/sf01/palette-picker'
 import {
   SHADER_CONFIGS,
@@ -29,10 +30,7 @@ const DemoCanvas = nextDynamic(
         aria-live="polite"
       >
         <div className="flex items-center gap-3">
-          <span
-            aria-hidden
-            className="block w-1.5 h-1.5 rounded-full bg-signal animate-pulse"
-          />
+          <SignalBullet size="sm" />
           <span className="text-caption-mono uppercase text-zinc-500 animate-pulse">
             loading shader
           </span>
@@ -101,16 +99,20 @@ export function SF01Client() {
   const handleClear = () => setResetKey(k => k + 1)
 
   return (
-    <main id="main-content" className="relative min-h-screen bg-canvas text-white">
+    <main id="main-content" className="relative min-h-screen text-white">
       <Nav />
 
-      <article className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+      <article className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 md:pt-20 md:pb-32">
+        {/* Lugar de la portada: aquí aterrizan las cuerdas de la escena
+            persistente (dos decks). A la derecha del texto en escritorio,
+            detrás del título en celular. */}
+        <div data-scene-cover="" aria-hidden className="pointer-events-none absolute left-4 right-4 top-10 h-40 md:left-auto md:right-6 md:top-16 md:h-72 md:w-[27%]" />
         {/* Hero */}
         <header className="mb-12 md:mb-16 max-w-3xl">
           <div className="flex items-center gap-3 mb-5">
-            <span className="block w-2 h-2 rounded-full bg-signal animate-pulse" />
+            <SignalBullet />
             <p className={`text-caption-mono uppercase text-signal ${spaceMono.className}`}>
-              SF-01 · Coming late 2026
+              SF-01 · In development
             </p>
           </div>
           <h1
@@ -152,7 +154,7 @@ export function SF01Client() {
                   />
                 </ClientOnly>
                 <div className="absolute top-3 left-3 flex items-center gap-2 z-10 pointer-events-none">
-                  <span className="block w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
+                  <SignalBullet size="sm" />
                   <span className={`text-caption-mono-sm uppercase text-white/70 ${spaceMono.className}`}>
                     {activeConfig.label} · live
                   </span>
@@ -162,7 +164,7 @@ export function SF01Client() {
                     Color signal + pulse vs el footer apagado del Voronoi. */}
                 {activeConfig.acceptsPointerSeeds ? (
                   <div className="absolute bottom-3 right-3 flex items-center gap-2 z-10 pointer-events-none">
-                    <span className="block w-1.5 h-1.5 rounded-full bg-signal animate-pulse" />
+                    <SignalBullet size="sm" />
                     <span className={`text-caption-mono-sm uppercase text-signal ${spaceMono.className}`}>
                       {activeConfig.canvasFooter}
                     </span>
@@ -264,7 +266,7 @@ export function SF01Client() {
             <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-signal/[0.04] blur-3xl pointer-events-none" />
             <div className="relative max-w-2xl">
               <p className={`text-caption-mono uppercase text-signal ${spaceMono.className} mb-4`}>
-                Closed beta · 2026
+                Closed beta
               </p>
               <h2 className={`text-display-md mb-4 ${microgramma.className}`}>
                 want a key
@@ -292,10 +294,10 @@ export function SF01Client() {
               <p className={`text-caption-mono-sm uppercase text-signal ${spaceMono.className}`}>
                 Status
               </p>
-              <p className="text-base text-white">In active development · late 2026 public release</p>
+              <p className="text-base text-white">In active development</p>
               <p className="text-sm text-ink-subtle">
                 Internal builds are running on macOS, Windows and the browser.
-                Closed beta opens later this year — see above for access.
+                Closed beta opens to a small group first — see above for access.
               </p>
             </div>
             <div className="space-y-2">

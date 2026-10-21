@@ -37,7 +37,7 @@ export function Footer() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-8">
-        <div className="space-y-4">
+        <div className="space-y-4 ascii-halo">
           <h3 className="text-xl font-light tracking-wider">CONNECT</h3>
           <div className="space-y-2 text-ink-muted">
             <p>México</p>
@@ -70,8 +70,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="text-center space-y-6">
-          <h2 className="text-3xl font-light tracking-wider">side_effects.art</h2>
+        <div className="text-center space-y-6 ascii-halo">
+          <h2 className="font-display text-2xl sm:text-3xl">side_effects.art</h2>
           <p className="text-ink-muted max-w-sm mx-auto">
             Exploring the intersection of code/art/creativity through generative art and interactive experiences.
           </p>
@@ -87,7 +87,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-4 ascii-halo">
           <h3 className="text-xl font-light tracking-wider">AVAILABILITY</h3>
           <div className="space-y-2 text-ink-muted">
             <div className="flex justify-between items-center">
@@ -116,7 +116,7 @@ export function Footer() {
 
       {/* Trust Badges */}
       <div className="relative z-10 max-w-6xl mx-auto mt-10 sm:mt-16 flex justify-center">
-        <div className="flex items-center gap-8 text-ink-subtle">
+        <div className="flex items-center gap-8 text-ink-subtle ascii-halo">
           <a
             href="https://creativecommons.org/licenses/by-nc-nd/4.0/"
             target="_blank"
@@ -145,7 +145,7 @@ export function Footer() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto mt-6 pt-6 sm:mt-8 sm:pt-8 border-t border-gray-800">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-ink-muted">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-ink-muted ascii-halo">
           <div className="flex gap-6">
             <Link href="/terms" className="hover:text-signal transition-colors duration-200 ease-out">Terms</Link>
             <Link href="/privacy" className="hover:text-signal transition-colors duration-200 ease-out">Privacy</Link>
