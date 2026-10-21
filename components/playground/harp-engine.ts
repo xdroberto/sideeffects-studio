@@ -369,6 +369,22 @@ export function createHarp(canvas: HTMLCanvasElement, { peg: pegButton, onNote, 
   pegButton.addEventListener('click', onPegClick)
 
   // --- Audio ----------------------------------------------------------------
+  // iOS calla Web Audio con el teléfono en silencio: la sesión de audio de una
+  // página es «ambient» por omisión. Con el permiso del visitante el Harp es
+  // reproducción, como un video (navigator.audioSession de Safari, iOS 17+);
+  // sin sonido, la sesión regresa a la de siempre.
+  let session = false
+  function playbackSession(on: boolean) {
+    const nav = navigator as Navigator & { audioSession?: { type: string } }
+    if (on === session || !nav.audioSession) return
+    session = on
+    try {
+      nav.audioSession.type = on ? 'playback' : 'auto'
+    } catch {
+      // Un tipo que este navegador no conoce: queda la sesión de siempre.
+    }
+  }
+
   function buffer(f: number, voice: Voice) {
     const A = st.audio as Audio
     const key = `${voice}:${Math.round(f * 10)}`
@@ -493,8 +509,12 @@ export function createHarp(canvas: HTMLCanvasElement, { peg: pegButton, onNote, 
   // de un gesto (en iOS el pointerdown de un dedo no cuenta; el pointerup sí).
   function unlock() {
     if (!st.consent || st.muted) return
+    playbackSession(true)
     if (!st.audio) st.audio = makeAudio()
-    if (!st.audio) st.consent = false
+    if (!st.audio) {
+      st.consent = false
+      playbackSession(false)
+    }
     level()
   }
 
@@ -688,13 +708,17 @@ export function createHarp(canvas: HTMLCanvasElement, { peg: pegButton, onNote, 
     },
     setSound(on) {
       if (on) {
+        // La sesión se pide antes de crear o reanudar el audio.
+        playbackSession(true)
         st.consent = true
         st.muted = false
         if (!st.audio) st.audio = makeAudio()
         if (!st.audio) st.consent = false
       } else st.muted = true
+      const playing = !!st.audio && st.consent && !st.muted
+      if (!playing) playbackSession(false)
       level()
-      return !!st.audio && st.consent && !st.muted
+      return playing
     },
     visibility(v) {
       st.visible = v
@@ -711,6 +735,7 @@ export function createHarp(canvas: HTMLCanvasElement, { peg: pegButton, onNote, 
       canvas.removeEventListener('pointerleave', onLeave)
       pegButton.removeEventListener('click', onPegClick)
       document.removeEventListener('visibilitychange', level)
+      playbackSession(false)
       const A = st.audio
       st.audio = null
       if (A) {
