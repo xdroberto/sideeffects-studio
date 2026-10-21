@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Nav } from '@/components/nav'
 import { Footer } from '@/components/footer'
 import { ClientOnly } from '@/components/client-only'
+import { SignalBullet } from '@/components/signal-bullet'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
 const DisplayVisualizer = nextDynamic(
@@ -54,14 +55,18 @@ const FEATURES = [
 
 export function ChordLabClient() {
   return (
-    <main id="main-content" className="relative min-h-screen bg-canvas text-white">
+    <main id="main-content" className="relative min-h-screen text-white">
       <Nav />
 
-      <article className="max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-16 md:pt-20 md:pb-32">
+      <article className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-8 pb-16 md:pt-20 md:pb-32">
+        {/* Lugar de la portada: aquí aterrizan las cuerdas de la escena
+            persistente (ocho pads). A la derecha del texto en escritorio,
+            detrás del título en celular. */}
+        <div data-scene-cover="" aria-hidden className="pointer-events-none absolute left-4 right-4 top-6 h-40 md:left-auto md:right-6 md:top-16 md:h-64 md:w-[33%]" />
         {/* Hero */}
         <header className="mb-8 md:mb-14 max-w-2xl">
           <div className="flex items-center gap-3 mb-5">
-            <span className="block w-2 h-2 rounded-full bg-signal animate-pulse" />
+            <SignalBullet />
             <p className={`text-caption-mono uppercase text-signal ${spaceMono.className}`}>
               Chord Lab · Coming early 2027
             </p>
@@ -441,7 +446,7 @@ function Display() {
           awaiting firmware
         </span>
         <span className={`text-[9px] uppercase tracking-[0.18em] text-green-500/40 ${spaceMono.className}`}>
-          q3 2026
+          early 2027
         </span>
       </div>
     </div>

@@ -1,7 +1,5 @@
 'use client'
 
-import nextDynamic from 'next/dynamic'
-import { Suspense } from 'react'
 import { Nav } from '@/components/nav'
 import { Gallery } from '@/components/gallery'
 import { Footer } from '@/components/footer'
@@ -10,26 +8,9 @@ import { HashScroll } from '@/components/hash-scroll'
 import { ScrambleText } from '@/components/scramble-text'
 import { Michroma as Microgramma, Space_Mono } from 'next/font/google'
 
-const DiamondScene = nextDynamic(
-  () => import('@/components/diamond-scene').then(mod => mod.DiamondScene),
-  {
-    ssr: false,
-    // Loading skeleton: black background + radial glow tenue donde irá el
-    // diamante, así el hero no parpadea negro→escena 3D. El gradient
-    // imita el `radial-gradient` overlay que la propia DiamondScene
-    // monta encima del canvas (rgba(255,0,0,0.05) center → transparent).
-    loading: () => (
-      <div
-        className="fixed inset-0 z-0 bg-black"
-        aria-hidden
-        style={{
-          background:
-            'radial-gradient(circle at center, rgba(255,0,0,0.04) 0%, transparent 70%)',
-        }}
-      />
-    ),
-  }
-)
+// El diamante ya no se monta aquí: vive en la escena persistente del
+// layout (components/scene/), que lo transforma al navegar y al bajar
+// hacia la galería.
 
 const microgramma = Microgramma({ subsets: ['latin'], weight: ['400'] })
 const spaceMono = Space_Mono({
@@ -40,12 +21,11 @@ const spaceMono = Space_Mono({
 
 export default function Home() {
   return (
-    <main id="main-content" className="relative min-h-screen bg-canvas text-white overflow-hidden">
-      <Suspense fallback={<div className="fixed inset-0 z-0 bg-canvas" />}>
-        <DiamondScene />
-      </Suspense>
+    <main id="main-content" className="relative min-h-screen text-white overflow-hidden">
       <HashScroll />
-      <div className="relative z-10">
+      {/* Sin z-index propio: la escena ya vive en el layout, debajo de todo,
+          y así la navbar fija (z-50) no queda atrapada en esta capa. */}
+      <div className="relative">
         <ClientOnly>
           <Nav />
         </ClientOnly>
@@ -67,12 +47,15 @@ export default function Home() {
           página (Link href="/#gallery"), gracias al scroll-behavior:
           smooth global definido en globals.css. El footer ya lleva
           id="about" internamente. */}
-      <div id="gallery">
+      {/* Escenario de B1: al bajar, el diamante se pliega sobre su onda y
+          la tinta crece aquí, antes de que la galería se abra encima. */}
+      <div aria-hidden className="h-[75vh]" />
+      <div id="gallery" className="scroll-mt-20">
         <ClientOnly>
           <Gallery />
         </ClientOnly>
       </div>
-      <div id="about">
+      <div id="about" className="scroll-mt-20">
         <ClientOnly>
           <Footer />
         </ClientOnly>

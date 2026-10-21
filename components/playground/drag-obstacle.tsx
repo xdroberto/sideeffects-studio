@@ -139,6 +139,8 @@ export function DragObstacle({
     <button
       ref={ref}
       type="button"
+      // La escena persistente dibuja su halo de cuerdas alrededor del orbe.
+      data-scene-cover=""
       onPointerDown={onPointerDown}
       aria-label="Drag the philosopher. The text reflows around it."
       style={{

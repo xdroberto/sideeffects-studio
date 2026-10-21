@@ -87,7 +87,9 @@ iframe:focus-visible,
   .animate-ping,
   .chromatic-title,
   .subtitle-glow-only,
-  .fader-glow {
+  .fader-glow,
+  .signal-bullet-wave,
+  .nav-wave {
     animation: none !important;
   }
   /* Orb del playground: la keyframe se llama `orb-pulse` y vive inline. */
@@ -180,5 +182,49 @@ iframe:focus-visible,
 
 .subtitle-glow-only {
     animation: subtitle-glow 5s ease-in-out infinite;
+}
+
+/* ─── Señal: viñeta y onda del menú ──────────────────────────────────
+   La onda del diamante del hero reducida a glifo. La viñeta
+   (components/signal-bullet.tsx) mide dos longitudes de onda y se
+   desplaza media caja en loop; la onda del menú marca la página actual
+   y avanza una longitud de onda (12px) por ciclo. Ambas sin costura. */
+@keyframes signal-run {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+}
+
+.signal-bullet-wave {
+    animation: signal-run 1.1s linear infinite;
+}
+
+@keyframes nav-wave-run {
+    from { transform: translateX(0); }
+    to { transform: translateX(-12px); }
+}
+
+.nav-wave {
+    animation: nav-wave-run 1.6s linear infinite;
+}
+
+/* ─── Footer legible sobre el ASCII ──────────────────────────────────
+   Un halo del color del fondo detrás de cada bloque de texto apaga el
+   campo ASCII solo ahí; el resto del footer conserva la textura.
+   `isolation` mantiene el ::before dentro del bloque (z-index -1 queda
+   detrás del texto pero encima del backdrop). */
+.ascii-halo {
+    position: relative;
+    isolation: isolate;
+}
+
+.ascii-halo::before {
+    content: '';
+    position: absolute;
+    inset: -0.75rem -1.25rem;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 24px;
+    background: rgba(0, 0, 0, 0.88);
+    filter: blur(16px);
 }
 

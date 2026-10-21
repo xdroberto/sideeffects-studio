@@ -110,7 +110,7 @@ export function PlaygroundClient() {
   const obstacleRadius = useResponsiveObstacleRadius()
 
   return (
-    <main id="main-content" className="relative min-h-screen bg-canvas text-white">
+    <main id="main-content" className="relative min-h-screen text-white">
       <ClientOnly>
         <Nav />
       </ClientOnly>
